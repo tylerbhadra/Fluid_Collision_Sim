@@ -1,42 +1,118 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<style>  
-    div.padded {  
-      padding-top: 0px;  
-      padding-right: 100px;  
-      padding-bottom: 0.25in;  
-      padding-left: 100px;  
-    }  
-  </style> 
-<title>Your Name  |  CS 184</title>
+<style>
+  body {
+    padding: 100px;
+    width: 1000px;
+    margin: auto;
+    text-align: left;
+    font-weight: 300;
+    font-family: 'Open Sans', sans-serif;
+    color: #121212;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+</style>
+<title>CS 184: Final Project Proposal</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
 </head>
+
+
 <body>
-  <H1> I don't know how to write clean HTML </H1>
-  <br>
-  <p>Someone clean this up pls</p>
-  <p> 2.2 Proposal Website
 
-Please create a proposal webpage with the following sections.
+<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2023</h1>
+<h1 align="middle">Final Project Proposal</h1>
+<h2 align="middle">Tyler Bhadra, Charlie Chen, Maxwell Lo, Victor Zhang</h2>
 
-    Title, Summary and Team Members
-        Provide us a descriptive title, 2-3 sentences that summarize your project, and list your three team members.
-    Problem Description
-        Here you should provide the context for your idea. Describe the problem that you are trying to solve, why it is important, where it is challenging. Give us a general idea on how you are going to solve it.
-    Goals and Deliverables
-        This is the most important part of your proposal. You should carefully think through what you are trying to accomplish, what results you are going for, and why you think you can accomplish those goals. For example:
-        Since this is a graphics class you will likely define the kind of images you will create (e.g. including a photo of a new lighting effect you will simulate).
-        If you are working on an interactive system, describe what demo you will create.
-        Define how you will measure the quality / performance of your system (e.g. graphs showing speedup, or quantifying accuracy). It may not be possible to define precise target metrics at this time, but we encourage you to try.
-        What questions do you plan to answer with your analysis?
-        You should break this section into two parts: (1) what you plan to deliver, and (2) what you hope to deliver. In (1), describe what you believe you must accomplish to have a successful project and achieve the grade you expect (i.e. your baseline plan -- planning for some unexpected problems would make sense). In (2), describe what you hope to achieve if things go well and you get ahead of schedule (your aspirational plan).
-    Schedule
-        In this section you should organize and plan the tasks and subtasks that your team will execute. Since presentations are ~4 weeks from the due-date of the proposal, you should include a set of tasks for every week.
-    Resources
-        List what resources, e.g. books, papers and/or online resources that are references for your project. List the computing platform, hardware and software resources that you will use for your project. You have a wide latitude here to use what you have access to, but be aware that you will have to support and trouble-shoot on your platform yourselves. If you are starting from an existing piece of code or system, describe and provide a pointer to it here.
+<br><br>
+
+<div>
+
+<h2 align="middle">Overview</h2>
+<p>
+  We will implement a two-dimensional interactive simulator with a top down view of fluid colliding with obstacles, 
+  similar to running water in a stream. We plan to achieve this using 2D grid of attributes (velocity, density/pressure, vorticity) 
+  that we can change in order to view different properties of the fluid. This grid of fluid attributes will also inform our visualization of
+  the fluid and its simulated behavior.
 </p>
+<br>
+
+<h2 align="middle">Problem Description</h2>
+<p>
+  We want to utilize the Navier Stokes equations to visualize the flow of a consistent velocity fluid and 
+  how that flow is disrupted by collision with obstacles. We will solve this by representing fluid as a 2D grid of 
+  attributes.
+</p>
+<br>
+
+<h2 align="middle">Goals and Deliverables</h2>
+<p align="middle"><b>Baseline Plan</b></p>
+<p>
+  Our primary deliverable is an interactive demo/simulation allowing a user to drag and create obstacles while observing how those obstacles affect the 
+  flow of fluid. Our main implementation goals are listed below:
+  <ul>
+    <li>A 2D grid of fluid with ability to switch between visualizations of fluid attributes, which shows how fluid moves around/is affected by obstacles</li>
+    <li>The ability to change the direction of the stream/add multiple streams</li>
+    <li>The ability to create/delete new obstacles.</li>
+  </ul>
+</p>
+<br>
+<p align="middle"><b>Aspirational Plan</b></p>
+<p>
+  In addition to our baseline plan we would like to focus on these elements of the interactive demo if time allows:
+  <ul>
+    <li>A clean and elegant UI.</li>
+    <li>The ability to change the direction of the stream or add multiple streams.</li>
+  </ul>
+</p>
+<br>
+<p align="middle"><b>Performance/Quality Measurments</b></p>
+<p>
+  As of now, we do not have any precise target metrics and will judge our program according to these general criteria:
+  <ul>
+    <li>Performance - ability to visualize flow in large/high res windows, with low latency. Interactive mode should be fast enough that a user doesn't 
+      feel a lag when moving obstacles around. </li>
+    <li>Quality - how good does it look visually, are particles moving as expected?</li>
+  </ul>
+</p>
+<br>
+
+<h2 align="middle">Schedule</h2>
+<p>
+  Week 1:
+  <ul>
+    <li>Set up frameworks.</li>
+    <li>Do research, lots of reading, begin doing detailed design of data structures and algorithms needed.</li>
+  </ul>
+  Week 2:
+  <ul>
+    <li>Implementing fluid behavior with the Navier Stokes equations, including support for obstacles.</li>
+  </ul>
+  Week 3:
+  <ul>
+    <li>Work on the visualization of the simulation.</li>
+    <li>Debug fluid behavior with the help of this visualization.</li>
+  </ul>
+  Week 4:
+  <ul>
+    <li>Implement interactivity (adding/modifying obstacles, adjusting simulation area) and debug this implementation.</li>
+    <li>Finish up the final presentation and record and edit necessary video and audio.</li>
+  </ul>
+</p>
+<br>
+
+<h2 align="middle">Resources</h2>
+<p align="middle"><a href="https://www.dgp.toronto.edu/public_user/stam/reality/Research/pdf/ns.pdf">Jos Stam: Stable Fluids</a></p>
+<p align="middle"><a href="https://physics.weber.edu/schroeder/fluids/">Weber State University Fluid Dynamics Simulation</a></p>
+<p align="middle"><a href="https://eprints.soton.ac.uk/349797/1/v20.pdf">Boundary Data Immersion Method for Cartesian-Grid
+  Simulations of Fluid-Body Interaction Problems</a></p>
+<!-- <p>
+  
+</p> -->
+<br>
+
 </body>
 </html>
-
