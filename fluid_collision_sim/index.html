@@ -48,7 +48,7 @@
           vAlpha -= custom_smoothstep(0.85, 1.0, percent);
 
           vec4 mvPos = modelViewMatrix * vec4(newPos, 1.0);
-          gl_PointSize = 15.0;
+          gl_PointSize = 10.0;
           gl_Position = projectionMatrix * mvPos;
       }
     </script>
@@ -65,7 +65,7 @@
       void main() {
           float d = length(gl_PointCoord - vec2(0.5));
           float a = 1.0 - custom_smoothstep(0.0, 0.5, d);
-          gl_FragColor = vec4(0.0, 0.0, 1.0, a * vAlpha);
+          gl_FragColor = vec4(0.65, 0.80, 0.89, a * vAlpha);
       }
     </script>
 

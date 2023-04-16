@@ -8,7 +8,7 @@ var displayConfig = {
     PRESSURE: 1,
     PRESSURE_ITERATIONS: 10,
     PAUSED: false,
-    NUM_PARTICLES: 15000
+    NUM_PARTICLES: 150000
     // Cont.
     // TODO
 };
@@ -69,7 +69,7 @@ function stop() {
 let particleMaterial = new THREE.ShaderMaterial({
     uniforms: {
         time: { type: "f", value: dt },
-        velocity: { type: "f", value: 2.1 }
+        velocity: { type: "f", value: 2.2 }
     },
     vertexShader: document.getElementById( 'particleVert' ).innerHTML,
     fragmentShader: document.getElementById( 'particleFrag' ).innerHTML,
