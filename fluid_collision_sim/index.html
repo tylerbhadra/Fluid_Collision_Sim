@@ -3,8 +3,6 @@
   <head>
     <meta charset="utf-8">
     <title>Fluid Collision Simulator</title>
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script> -->
-
     <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
 
     <script type="importmap">
@@ -22,6 +20,55 @@
     </style>
   </head>
   <body>
+    <script id="particleVert" type="shader-code">
+      precision mediump float;
+      uniform float time;
+      uniform float velocity;
+
+      varying float vAlpha;
+
+      attribute float lifespan;
+      attribute float offset;
+
+      float custom_smoothstep(float a, float b, float x) {
+        float t = clamp((x - a) / (b - a), 0.0, 1.0);
+     
+        return t * t * (3.0 - (2.0 * t));
+      }
+
+      void main() {
+          vec3 newPos = position;
+          float current = mod(offset + time, lifespan);
+          float percent = current/lifespan;
+
+          newPos.x += velocity * current;
+          newPos.y += position.y;
+
+          vAlpha = custom_smoothstep(0.0, 0.05, percent);
+          vAlpha -= custom_smoothstep(0.85, 1.0, percent);
+
+          vec4 mvPos = modelViewMatrix * vec4(newPos, 1.0);
+          gl_PointSize = 15.0;
+          gl_Position = projectionMatrix * mvPos;
+      }
+    </script>
+    <script id="particleFrag" type="shader-code">
+      precision mediump float;
+      varying float vAlpha;
+
+      float custom_smoothstep(float a, float b, float x) {
+        float t = clamp((x - a) / (b - a), 0.0, 1.0);
+     
+        return t * t * (3.0 - (2.0 * t));
+      }
+
+      void main() {
+          float d = length(gl_PointCoord - vec2(0.5));
+          float a = 1.0 - custom_smoothstep(0.0, 0.5, d);
+          gl_FragColor = vec4(0.0, 0.0, 1.0, a * vAlpha);
+      }
+    </script>
+
     <script type="module" src="src/main.js"></script>
   </body>
 </html>
