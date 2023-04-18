@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 
 var scene, camera, renderer, dt;
+const BOX_SIZE = 4;
+var grid, gridHelper;
 
 var displayConfig = {
     // BASIC DISPLAY OPTIONS WITH PLACEHOLDER VALUES -> ADD MORE + DECIDE ON DEFAULT VALUES LATER
@@ -8,13 +10,26 @@ var displayConfig = {
     PRESSURE: 1,
     PRESSURE_ITERATIONS: 10,
     PAUSED: false,
-    NUM_PARTICLES: 150000
+    NUM_PARTICLES: 150000,
+    SHOW_GRID: false, //For debugging
     // Cont.
     // TODO
 };
 
+
+class GridBox {
+    constructor() {
+        //TODO: add grid properties here
+        this.velocity = 0;
+        this.density = 0;
+        this.vorticity = 0;
+    }
+}
+
+
 initGUI();
 initScene();
+initGrid();
 
 function initGUI() {
     var gui = new dat.GUI( { width: 300 } );
@@ -25,6 +40,7 @@ function initGUI() {
     gui.add(displayConfig, 'PRESSURE_ITERATIONS', 0, 10).name("Pressure Iterations");
     gui.add(displayConfig, 'NUM_PARTICLES', 10000, 15000).name("Number of Particles");
     gui.add(displayConfig, 'PAUSED').name("Pause?");
+    gui.add(displayConfig, 'SHOW_GRID').name("Grid");
     // Cont.
     // TODO
 }
@@ -47,6 +63,41 @@ function initScene() {
 
     displayConfig.PAUSED = false;
     dt = 0;
+}
+
+
+function initGrid() {
+    var gridWidth = window.innerWidth;
+    var gridHeight = window.innerHeight;
+    //n by n pixel box per grid square
+    //+1 might push it off the screen but doesn't really matter, and it 
+    //prevents it being short
+    grid = new Array(Math.floor(gridHeight/BOX_SIZE) + 1);
+    for (var i = 0; i < grid.length; i++) {
+        grid[i] = new Array(Math.floor(gridWidth/BOX_SIZE) + 1);
+        for (var j = 0; j < grid[i].length; j++) {
+            var newGridBox = new GridBox();
+            grid[i][j] = newGridBox;
+        }
+    }
+    var size = gridWidth/4;
+    var divisions = grid.length;
+    //gridHelper is not directly tied to grid, this is currently just for display purposes
+    //gridHelper is currently forced to be a square, which is inefficient unless you're using
+    //a square window. Might refactor into a rectangle later but it's not a simple 
+    //implementation like calling gridhelper is.
+    gridHelper = new THREE.GridHelper( size, divisions );
+}
+
+/* Get the grid square tied to the (x, y) coordinate. 
+    If only 1 argument, get the square in row major order. */
+function getGridSquare(x, y) {
+    if(typeof y !== "undefined") {
+        return grid[y][x];
+    }
+    var row = Math.floor(x/(grid[0].length));
+    var col = x - row * grid[0].length;
+    return grid[row][col];
 }
 
 function start() {
@@ -95,6 +146,8 @@ geometry.setAttribute('offset', new THREE.Float32BufferAttribute(offset, 1))
 
 let particles = new THREE.Points(geometry, particleMaterial);
 scene.add(particles);
+gridHelper.rotation.x=Math.PI/2;
+scene.add(gridHelper);
 
 let clearPlane = new THREE.Mesh(
     new THREE.PlaneGeometry(window.innerWidth, window.innerHeight),
@@ -119,11 +172,10 @@ function render() {
     if (!displayConfig.PAUSED) {
         dt += 0.5;
         particleMaterial.uniforms.time.value = dt;
-        renderer.render(scene, camera);
-        requestAnimationFrame(render);
-    } else {
-        return;
+        renderer.render(scene, camera);   
     }
+    gridHelper.visible = displayConfig.SHOW_GRID;
+    requestAnimationFrame(render);
 }
 
 render();
