@@ -29,6 +29,7 @@
 
       attribute float lifespan;
       attribute float offset;
+      attribute float grid_velocity;
 
       float custom_smoothstep(float a, float b, float x) {
         float t = clamp((x - a) / (b - a), 0.0, 1.0);
@@ -40,8 +41,9 @@
           vec3 newPos = position;
           float current = mod(offset + time, lifespan);
           float percent = current/lifespan;
-
-          newPos.x += velocity * current;
+          
+          //newPos.x += velocity * current;
+          newPos.x += grid_velocity * current;
           newPos.y += position.y;
 
           vAlpha = custom_smoothstep(0.0, 0.05, percent);
@@ -50,6 +52,7 @@
           vec4 mvPos = modelViewMatrix * vec4(newPos, 1.0);
           gl_PointSize = 10.0;
           gl_Position = projectionMatrix * mvPos;
+          
       }
     </script>
     <script id="particleFrag" type="shader-code">

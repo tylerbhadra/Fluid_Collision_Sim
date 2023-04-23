@@ -20,9 +20,9 @@ var displayConfig = {
 class GridBox {
     constructor() {
         //TODO: add grid properties here
-        this.velocity = 0;
-        this.density = 0;
-        this.vorticity = 0;
+        this.velocity = 0.0;
+        this.density = 0.0;
+        this.vorticity = 0.0;
     }
 }
 
@@ -77,17 +77,21 @@ function initGrid() {
         grid[i] = new Array(Math.floor(gridWidth/BOX_SIZE) + 1);
         for (var j = 0; j < grid[i].length; j++) {
             var newGridBox = new GridBox();
+            newGridBox.velocity = i*j;
             grid[i][j] = newGridBox;
         }
     }
-    var size = gridWidth/4;
+    var size = gridWidth/BOX_SIZE;
     var divisions = grid.length;
     //gridHelper is not directly tied to grid, this is currently just for display purposes
     //gridHelper is currently forced to be a square, which is inefficient unless you're using
     //a square window. Might refactor into a rectangle later but it's not a simple 
     //implementation like calling gridhelper is.
     gridHelper = new THREE.GridHelper( size, divisions );
+    //I don't understand 3js so gonna focus on getting the grid math to work first
+    //Display comes after
 }
+
 
 /* Get the grid square tied to the (x, y) coordinate. 
     If only 1 argument, get the square in row major order. */
@@ -132,17 +136,29 @@ let numP = displayConfig.NUM_PARTICLES;
 let positions = [];
 let lifespan = [];
 let offset = [];
+let grid_velocity = [];
 
 for (let i = 0; i < numP; i++) {
-    positions.push(THREE.MathUtils.randFloatSpread( 2000 ) * 0.2, THREE.MathUtils.randFloatSpread( 2000 ) * 0.2, 0.0);
+    var newX = THREE.MathUtils.randFloatSpread( 2000 ) * 0.2;
+    var newY = THREE.MathUtils.randFloatSpread( 2000 ) * 0.2;
+    positions.push(newX, newY, 0.0);
     lifespan.push(THREE.MathUtils.randFloatSpread(10) * 5);
-    offset.push(THREE.MathUtils.randFloatSpread(30) * 1000)
+    offset.push(THREE.MathUtils.randFloatSpread(30) * 1000);
+    //Need to figure out how to convert local position to on screen position 
+    // or refactor grid to not be based on screen position
+    var gridX = -1.0;
+    var gridY = -1.0;
+    // grid_velocity.push(getGridSquare(gridX, gridY).velocity);
+    //Causes high x and y values (top right of screen) to have greater velocity
+    var testScalingVelocity = Math.pow(1.25, ((newX)/25.0 + (newY)/25.0));
+    grid_velocity.push(testScalingVelocity);
 }
 
 let geometry = new THREE.BufferGeometry();
 geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
 geometry.setAttribute('lifespan', new THREE.Float32BufferAttribute(lifespan, 1));
-geometry.setAttribute('offset', new THREE.Float32BufferAttribute(offset, 1))
+geometry.setAttribute('offset', new THREE.Float32BufferAttribute(offset, 1));
+geometry.setAttribute('grid_velocity', new THREE.Float32BufferAttribute(grid_velocity, 1));
 
 let particles = new THREE.Points(geometry, particleMaterial);
 scene.add(particles);
