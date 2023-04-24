@@ -22,8 +22,8 @@ var finalRender;
 // Variables for final render
 var finalTexture;
 var finalMaterial;
+var finalGeometry;
 var plane;
-var quad;
 
 var displayConfig = {
     // BASIC DISPLAY OPTIONS WITH PLACEHOLDER VALUES -> ADD MORE + DECIDE ON DEFAULT VALUES LATER
@@ -79,9 +79,10 @@ function initScene() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    camera.position.set( 0, 0, 100 );
-    camera.lookAt( 0, 0, 0 );
+    // camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    // camera.position.set( 0, 0, 100 );
+    // camera.lookAt( 0, 0, 0 );
 
     displayConfig.PAUSED = false;
     dt = 0;
@@ -139,10 +140,10 @@ function init_attrib_fields() {
 
     // This is for the actual render to the canvas. The finalTexture will be set equal to the values one of the attribute fields
     finalTexture = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
-    plane = new THREE.PlaneGeometry( window.innerWidth, window.innerHeight );
-    finalMaterial =  new THREE.MeshBasicMaterial({map: finalTexture.texture, color: 'white'});
-    quad = new THREE.Mesh( plane, finalMaterial );
-    scene.add(quad);
+    finalGeometry = new THREE.PlaneGeometry( 2, 2 );
+    finalMaterial =  new THREE.MeshBasicMaterial({map: finalTexture.texture});
+    plane = new THREE.Mesh( finalGeometry, finalMaterial );
+    scene.add(plane);
 }
 
 function start() {
@@ -230,6 +231,7 @@ function render() {
 
     // Render updated scene.
 
+
     // if (!displayConfig.PAUSED) {
     //     dt += 0.5;
     //     particleMaterial.uniforms.time.value = dt;
@@ -240,14 +242,9 @@ function render() {
     if (!displayConfig.PAUSED) {
         finalRender.renderToTarget(renderer, velocityField.read_buf, finalTexture);
         renderer.render(scene, camera);
-
-        // dt += 0.5;
-        // particleMaterial.uniforms.time.value = dt;
-        // renderer.render(scene, camera);  
-        // renderer.render(obstacleScene, camera); 
     }
     gridHelper.visible = displayConfig.SHOW_GRID;
-    requestAnimationFrame(render);
+    // requestAnimationFrame(render);
 }
 
 render()

@@ -89,8 +89,8 @@
           float percent = current/lifespan;
           vec2 velocity = texture2D(velocityField, position.xy / res.xy).xy;
 
-          newPos.x += velocity.x * current;
-          newPos.y += velocity.y * current;
+          newPos.x += 1.0 * current;
+          newPos.y += 0.0 * current;
 
           vAlpha = custom_smoothstep(0.0, 0.05, percent);
           vAlpha -= custom_smoothstep(0.85, 1.0, percent);

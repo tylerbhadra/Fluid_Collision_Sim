@@ -14,7 +14,7 @@ export default class ParticleTracers {
         this.uniforms = {
             time: { type: "f" },
             res: {type: "v2", value: this.gridRes},
-            velocityField: { type: "t"}
+            velocityField: { type: "t", value: null}
         }
 
         this.material = new THREE.ShaderMaterial({
@@ -57,8 +57,8 @@ export default class ParticleTracers {
 
     renderToTarget(renderer, input, output, dt) {
         this.renderer = renderer;
-        this.uniforms.time = dt;
-        this.uniforms.velocityField = input;
+        this.uniforms.time.value = dt;
+        this.uniforms.velocityField.value = input.texture;
 
         this.renderer.setRenderTarget(output);
         this.renderer.render(this.scene, this.camera);
