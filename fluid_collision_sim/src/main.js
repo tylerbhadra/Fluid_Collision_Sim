@@ -1,8 +1,29 @@
 import * as THREE from 'three';
+import AttributeField from './AttributeField.js';
+import ParticleTracers from './ParticleTracers.js';
+import ConfigInator from './Config-inator.js';
+import FinalRender from './FinalRender.js';
 
 var scene, camera, renderer, dt;
 const BOX_SIZE = 4;
 var grid, gridHelper;
+var grid_resolution = new THREE.Vector2(512, 256);
+
+// Attribute Fields
+var velocityField;
+var boundaryField;
+var particlePosField;
+
+// Shaders
+var v_conf_inator;
+var particleTracers;
+var finalRender;
+
+// Variables for final render
+var finalTexture;
+var finalMaterial;
+var plane;
+var quad;
 
 var displayConfig = {
     // BASIC DISPLAY OPTIONS WITH PLACEHOLDER VALUES -> ADD MORE + DECIDE ON DEFAULT VALUES LATER
@@ -30,6 +51,7 @@ class GridBox {
 initGUI();
 initScene();
 initGrid();
+init_attrib_fields();
 
 function initGUI() {
     var gui = new dat.GUI( { width: 300 } );
@@ -100,6 +122,29 @@ function getGridSquare(x, y) {
     return grid[row][col];
 }
 
+function init_attrib_fields() {
+
+    // Initialize attribute fields
+    velocityField = new AttributeField(grid_resolution);
+    boundaryField = new AttributeField(grid_resolution);
+    particlePosField = new AttributeField(grid_resolution);
+
+    // This just initializes the velocityField with v = < 1,0,0,1 > (i.e fluid initially flows to the right)
+    v_conf_inator = new ConfigInator(grid_resolution);
+    v_conf_inator.configure_field(renderer, velocityField.read_buf);
+
+    // Initialize shaders
+    particleTracers = new ParticleTracers(displayConfig.NUM_PARTICLES, grid_resolution);
+    finalRender = new FinalRender(grid_resolution);
+
+    // This is for the actual render to the canvas. The finalTexture will be set equal to the values one of the attribute fields
+    finalTexture = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
+    plane = new THREE.PlaneGeometry( window.innerWidth, window.innerHeight );
+    finalMaterial =  new THREE.MeshBasicMaterial({map: finalTexture.texture, color: 'white'});
+    quad = new THREE.Mesh( plane, finalMaterial );
+    scene.add(quad);
+}
+
 function start() {
     displayConfig.PAUSED = false;
 }
@@ -108,8 +153,6 @@ function stop() {
     displayConfig.PAUSED = true;
 }
 
-
-
 //////////////////////////////////////////////////////////////////////////////
 //// PARTICLE STUFF, PURELY FOR VISUALS, NOT NEEDED FOR GRID COMPUTATIONS ////
 //////////////////////////////////////////////////////////////////////////////
@@ -117,65 +160,94 @@ function stop() {
 // Will modularize this later and rework shader logic to update particle positions based on the 
 // velocity vectors in the velocity field/grid
 
-let particleMaterial = new THREE.ShaderMaterial({
-    uniforms: {
-        time: { type: "f", value: dt },
-        velocity: { type: "f", value: 2.2 }
-    },
-    vertexShader: document.getElementById( 'particleVert' ).innerHTML,
-    fragmentShader: document.getElementById( 'particleFrag' ).innerHTML,
-    transparent: true,
-    depthWrite: false,
-    depthTest: false
-});
-let numP = displayConfig.NUM_PARTICLES;
-let positions = [];
-let lifespan = [];
-let offset = [];
+// let particleMaterial = new THREE.ShaderMaterial({
+//     uniforms: {
+//         time: { type: "f", value: dt },
+//         velocity: { type: "f", value: 2.2 }
+//     },
+//     vertexShader: document.getElementById( 'particleVert' ).innerHTML,
+//     fragmentShader: document.getElementById( 'particleFrag' ).innerHTML,
+//     transparent: true,
+//     depthWrite: false,
+//     depthTest: false
+// });
+// let numP = displayConfig.NUM_PARTICLES;
+// let positions = [];
+// let lifespan = [];
+// let offset = [];
 
-for (let i = 0; i < numP; i++) {
-    positions.push(THREE.MathUtils.randFloatSpread( 2000 ) * 0.2, THREE.MathUtils.randFloatSpread( 2000 ) * 0.2, 0.0);
-    lifespan.push(THREE.MathUtils.randFloatSpread(10) * 5);
-    offset.push(THREE.MathUtils.randFloatSpread(30) * 1000)
-}
+// for (let i = 0; i < numP; i++) {
+//     positions.push(THREE.MathUtils.randFloatSpread( 2000 ) * 0.2, THREE.MathUtils.randFloatSpread( 2000 ) * 0.2, 0.0);
+//     lifespan.push(THREE.MathUtils.randFloatSpread(10) * 5);
+//     offset.push(THREE.MathUtils.randFloatSpread(30) * 1000)
+// }
 
-let geometry = new THREE.BufferGeometry();
-geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-geometry.setAttribute('lifespan', new THREE.Float32BufferAttribute(lifespan, 1));
-geometry.setAttribute('offset', new THREE.Float32BufferAttribute(offset, 1))
+// let geometry = new THREE.BufferGeometry();
+// geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+// geometry.setAttribute('lifespan', new THREE.Float32BufferAttribute(lifespan, 1));
+// geometry.setAttribute('offset', new THREE.Float32BufferAttribute(offset, 1))
 
-let particles = new THREE.Points(geometry, particleMaterial);
-scene.add(particles);
-gridHelper.rotation.x=Math.PI/2;
-scene.add(gridHelper);
+// let particles = new THREE.Points(geometry, particleMaterial);
+// scene.add(particles);
+// gridHelper.rotation.x=Math.PI/2;
+// // scene.add(gridHelper);
 
-let clearPlane = new THREE.Mesh(
-    new THREE.PlaneGeometry(window.innerWidth, window.innerHeight),
-    new THREE.MeshBasicMaterial({
-        transparent: true,
-        color: 0xffffff,
-        opacity: 0.05
-    })
-)
+// let clearPlane = new THREE.Mesh(
+//     new THREE.PlaneGeometry(window.innerWidth, window.innerHeight),
+//     new THREE.MeshBasicMaterial({
+//         transparent: true,
+//         color: 0xffffff,
+//         opacity: 0.1
+//     })
+// )
 
-scene.add(clearPlane);
+// scene.add(clearPlane);
 
 ///////////////////////////////
 //// END OF PARTICLE STUFF ////
 ///////////////////////////////
 
+// var obstacleScene = new THREE.Scene();
+// let circle_geometry = new THREE.CircleGeometry( 10, 32 );
+// let circle_material = new THREE.ShaderMaterial({
+//     uniforms: {
+//         time: { type: "f", value: dt },
+//         boundaryField: { type: "t", value: boundaryField }
+//     },
+//     fragmentShader: document.getElementById( 'boundaryFrag' ).innerHTML,
+//     transparent: true,
+//     depthWrite: false,
+//     depthTest: false
+// });
+// const circle = new THREE.Mesh( circle_geometry, circle_material );
+// obstacleScene.add( circle );
+
 function render() {
     // Probably implement main simulation step below, update relevant grids/buffers
     // TODO
+    // particleTracers.renderToTarget(renderer, velocityField.read_buf, null, dt)
+    // particlePosField.update_read_buf();
 
     // Render updated scene.
+
+    // if (!displayConfig.PAUSED) {
+    //     dt += 0.5;
+    //     particleMaterial.uniforms.time.value = dt;
+    //     renderer.render(scene, camera);  
+    //     // renderer.render(obstacleScene, camera); 
+    // }
+    
     if (!displayConfig.PAUSED) {
-        dt += 0.5;
-        particleMaterial.uniforms.time.value = dt;
-        renderer.render(scene, camera);   
+        finalRender.renderToTarget(renderer, velocityField.read_buf, finalTexture);
+        renderer.render(scene, camera);
+
+        // dt += 0.5;
+        // particleMaterial.uniforms.time.value = dt;
+        // renderer.render(scene, camera);  
+        // renderer.render(obstacleScene, camera); 
     }
     gridHelper.visible = displayConfig.SHOW_GRID;
     requestAnimationFrame(render);
 }
 
-render();
+render()

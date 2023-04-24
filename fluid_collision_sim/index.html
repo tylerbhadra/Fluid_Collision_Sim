@@ -20,10 +20,57 @@
     </style>
   </head>
   <body>
+    <script id="configVelocityFrag" type="shader-code">
+      precision mediump float;
+
+      // uniform vec2 gridRes;
+      // uniform sampler2D dataTex;
+
+      // uniform float initialVal;
+
+      void main() {
+        // vec2 pixel  = gl_FragCoord.xy / gridRes.xy
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+      }
+    </script>
+    <script id="finalRenderFrag" type="shader-code">
+      precision mediump float;
+
+      uniform vec2 gridRes;
+      uniform sampler2D inputTexture;
+
+      void main() {
+        vec2 pixel = gl_FragCoord.xy / gridRes.xy;
+        gl_FragColor = vec4(texture2D(inputTexture, pixel).xyz, 1.0);
+      }
+    </script>
+    <script id="finalRenderParticleVert" type="shader-code">
+      precision mediump float;
+
+      uniform vec2 gridRes;
+      uniform sampler2D inputTexture;
+
+      void main() {
+        vec2 pixel = gl_FragCoord.xy / gridRes.xy;
+        gl_FragColor = vec4(texture2D(inputTexture, pixel).xyz, 1.0);
+      }
+    </script>
+    <script id="finalRenderParticleFrag" type="shader-code">
+      precision mediump float;
+
+      uniform vec2 gridRes;
+      uniform sampler2D inputTexture;
+
+      void main() {
+        vec2 pixel = gl_FragCoord.xy / gridRes.xy;
+        gl_FragColor = vec4(texture2D(inputTexture, pixel).xyz, 1.0);
+      }
+    </script>
     <script id="particleVert" type="shader-code">
       precision mediump float;
       uniform float time;
-      uniform float velocity;
+      uniform vec2 res;
+      uniform sampler2D velocityField;
 
       varying float vAlpha;
 
@@ -40,15 +87,16 @@
           vec3 newPos = position;
           float current = mod(offset + time, lifespan);
           float percent = current/lifespan;
+          vec2 velocity = texture2D(velocityField, position.xy / res.xy).xy;
 
-          newPos.x += velocity * current;
-          newPos.y += position.y;
+          newPos.x += velocity.x * current;
+          newPos.y += velocity.y * current;
 
           vAlpha = custom_smoothstep(0.0, 0.05, percent);
           vAlpha -= custom_smoothstep(0.85, 1.0, percent);
 
           vec4 mvPos = modelViewMatrix * vec4(newPos, 1.0);
-          gl_PointSize = 10.0;
+          gl_PointSize = 4.0;
           gl_Position = projectionMatrix * mvPos;
       }
     </script>
@@ -68,7 +116,22 @@
           gl_FragColor = vec4(0.65, 0.80, 0.89, a * vAlpha);
       }
     </script>
+    <script id="boundaryFrag" type="shader-code">
+      precision mediump float;
 
+      uniform float time;
+      uniform sampler2D boundaryField;
+
+      void main() {
+        float boundary_exists = 1.0;
+        gl_FragColor = vec4(boundary_exists, 0, 0, 1);
+      }
+    </script>
+
+    <script type="module" src="src/AttributeField.js"></script>
+    <script type="module" src="src/particleTracers.js"></script>
+    <script type="module" src="src/Config-inator.js"></script>
+    <script type="module" src="src/FinalRender.js"></script>
     <script type="module" src="src/main.js"></script>
   </body>
 </html>
