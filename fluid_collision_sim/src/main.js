@@ -77,7 +77,8 @@ function initGrid() {
         grid[i] = new Array(Math.floor(gridWidth/BOX_SIZE) + 1);
         for (var j = 0; j < grid[i].length; j++) {
             var newGridBox = new GridBox();
-            newGridBox.velocity = i*j;
+            //Arbitrary numbers to make particles go at different speeds
+            newGridBox.velocity = Math.pow(1.2, 4 * ((i)/grid.length + (j)/grid[0].length));
             grid[i][j] = newGridBox;
         }
     }
@@ -144,14 +145,10 @@ for (let i = 0; i < numP; i++) {
     positions.push(newX, newY, 0.0);
     lifespan.push(THREE.MathUtils.randFloatSpread(10) * 5);
     offset.push(THREE.MathUtils.randFloatSpread(30) * 1000);
-    //Need to figure out how to convert local position to on screen position 
-    // or refactor grid to not be based on screen position
-    var gridX = -1.0;
-    var gridY = -1.0;
-    // grid_velocity.push(getGridSquare(gridX, gridY).velocity);
-    //Causes high x and y values (top right of screen) to have greater velocity
-    var testScalingVelocity = Math.pow(1.25, ((newX)/25.0 + (newY)/25.0));
-    grid_velocity.push(testScalingVelocity);
+    //Based on the random float spread above. Replace 200/400 with the minimum negative value and the spread.
+    var gridX = Math.floor((((newX + 200.0)/400) * window.innerWidth)/BOX_SIZE);
+    var gridY = Math.floor((((newY + 200.0)/400) * window.innerHeight)/BOX_SIZE);
+    grid_velocity.push(getGridSquare(gridX, gridY).velocity);
 }
 
 let geometry = new THREE.BufferGeometry();
