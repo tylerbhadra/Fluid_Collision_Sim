@@ -13,7 +13,7 @@ export default class ConfigInator {
         this.gridRes = res;
 
         this.uniforms = {
-            // gridRes: {type: "v2", value: this.gridRes},
+            gridRes: {type: "v2", value: this.gridRes},
             // dataTex: {type: "t"}
             initialVal: {type: "f"}
         }
@@ -27,7 +27,7 @@ export default class ConfigInator {
         })
 
         // this.geometry = new THREE.PlaneGeometry( 2 * (res.x - 2) / res.x, 2 * (res.y - 2) / res.y );
-        this.geometry = new THREE.PlaneGeometry( 2, 2 );
+        this.geometry = new THREE.PlaneGeometry( 2, 2);
         this.plane = new THREE.Mesh(this.geometry, this.material);
         this.scene.add(this.plane);
     }

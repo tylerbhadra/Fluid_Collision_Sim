@@ -23,14 +23,14 @@
     <script id="configVelocityFrag" type="shader-code">
       precision mediump float;
 
-      // uniform vec2 gridRes;
+      uniform vec2 gridRes;
       // uniform sampler2D dataTex;
 
       // uniform float initialVal;
 
       void main() {
-        // vec2 pixel  = gl_FragCoord.xy / gridRes.xy
-        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        vec2 pixel  = gl_FragCoord.xy / gridRes;
+        gl_FragColor = vec4(gl_FragCoord.xy/gridRes.xy, 0.5, 1.0);
       }
     </script>
     <script id="finalRenderFrag" type="shader-code">
@@ -41,29 +41,59 @@
 
       void main() {
         vec2 pixel = gl_FragCoord.xy / gridRes.xy;
-        gl_FragColor = vec4(texture2D(inputTexture, pixel).xyz, 1.0);
+        // gl_FragColor = vec4(texture2D(inputTexture, pixel).xyz, 1.0);
+        gl_FragColor = vec4(gl_FragCoord.xy, 0.0, 1.0);
       }
     </script>
-    <script id="finalRenderParticleVert" type="shader-code">
+    <script id="particleSimVert" type="shader-code">
+      precision mediump float;
+
+      varying vec2 vUv;
+
+      void main() {
+        vUv = vec2(uv.x, uv.y);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+      }
+    </script>
+    <script id="particleSimFrag" type="shader-code">
       precision mediump float;
 
       uniform vec2 gridRes;
-      uniform sampler2D inputTexture;
+      uniform float dt;
+      uniform sampler2D particlePositions;
+      uniform sampler2D velocityField;
+
+      varying vec2 vUv;
 
       void main() {
-        vec2 pixel = gl_FragCoord.xy / gridRes.xy;
-        gl_FragColor = vec4(texture2D(inputTexture, pixel).xyz, 1.0);
+        vec2 pos = texture2D(particlePositions, vUv);
+        vec2 velocity = texture2D(velocityField, pos/gridRes);
+
+        pos.x = velocity.x * pos.x;
+        pos.y = velocity.y * pos.y;
+
+        gl_FragColor = vec4(pos, 0.0, 1.0);
       }
     </script>
-    <script id="finalRenderParticleFrag" type="shader-code">
+    <script id="particleRenderVert" type="shader-code">
       precision mediump float;
 
       uniform vec2 gridRes;
-      uniform sampler2D inputTexture;
+      uniform sampler2D particlePositions;
 
       void main() {
-        vec2 pixel = gl_FragCoord.xy / gridRes.xy;
-        gl_FragColor = vec4(texture2D(inputTexture, pixel).xyz, 1.0);
+        vec2 pos = texture2D(particlePositions, position);
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4( pos, 0.0, 1.0 );
+
+        gl_PointSize = 4.0;
+      }
+    </script>
+    <script id="particleRenderFrag" type="shader-code">
+      precision mediump float;
+
+      void main() {
+        gl_FragColor = vec4(0.65, 0.80, 0.89, 1.0);
       }
     </script>
     <script id="particleVert" type="shader-code">
@@ -131,7 +161,7 @@
     <script type="module" src="src/AttributeField.js"></script>
     <script type="module" src="src/particleTracers.js"></script>
     <script type="module" src="src/Config-inator.js"></script>
-    <script type="module" src="src/FinalRender.js"></script>
+    <script type="module" src="src/GridCellRender.js"></script>
     <script type="module" src="src/main.js"></script>
   </body>
 </html>

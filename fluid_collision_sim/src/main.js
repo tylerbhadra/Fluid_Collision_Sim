@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import AttributeField from './AttributeField.js';
 import ParticleTracers from './ParticleTracers.js';
 import ConfigInator from './Config-inator.js';
-import FinalRender from './FinalRender.js';
+import GridCellRender from './GridCellRender.js';
 
 var scene, camera, renderer, dt;
 const BOX_SIZE = 4;
@@ -136,12 +136,19 @@ function init_attrib_fields() {
 
     // Initialize shaders
     particleTracers = new ParticleTracers(displayConfig.NUM_PARTICLES, grid_resolution);
-    finalRender = new FinalRender(grid_resolution);
+    // particleSim = new ParticleSim(grid_resolution)
+    finalRender = new GridCellRender(grid_resolution);
 
     // This is for the actual render to the canvas. The finalTexture will be set equal to the values one of the attribute fields
     finalTexture = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
     finalGeometry = new THREE.PlaneGeometry( 2, 2 );
     finalMaterial =  new THREE.MeshBasicMaterial({map: finalTexture.texture});
+    // finalMaterial = new THREE.ShaderMaterial({
+    //     fragmentShader: document.getElementById( 'configVelocityFrag' ).innerHTML,
+    //     depthWrite: false,
+    //     depthTest: false,
+    //     blending: THREE.NoBlending
+    // })
     plane = new THREE.Mesh( finalGeometry, finalMaterial );
     scene.add(plane);
 }
@@ -244,7 +251,7 @@ function render() {
         renderer.render(scene, camera);
     }
     gridHelper.visible = displayConfig.SHOW_GRID;
-    // requestAnimationFrame(render);
+    requestAnimationFrame(render);
 }
 
 render()

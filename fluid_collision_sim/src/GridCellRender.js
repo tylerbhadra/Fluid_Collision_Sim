@@ -2,10 +2,10 @@ import * as THREE from 'three';
 
 /**
  * Represents what is actually drawn to the screen. Following all grid computations for the current simulation step, maps 
- * the vertex/frag data from one of the relevant attribute field read buffers (such as particlePosField or pressureField) 
- * to the output buffer, which will be used as a texture material for the canvas.
+ * the vertex attribute data from one of the relevant attribute field read buffers (such as velocity or pressure, or
+ * boundaries/obstacles) to the output buffer, which will be used as a texture material for the canvas.
  */
-export default class FinalRender {
+export default class GridCellRender {
     constructor(res) {
         this.scene = new THREE.Scene();
         this.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 );
