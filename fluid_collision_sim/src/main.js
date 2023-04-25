@@ -3,6 +3,7 @@ import AttributeField from './AttributeField.js';
 import ParticleTracers from './ParticleTracers.js';
 import ConfigInator from './Config-inator.js';
 import FinalRender from './FinalRender.js';
+import Advector from './Advect.js';
 
 var scene, camera, renderer, dt;
 const BOX_SIZE = 4;
@@ -16,8 +17,10 @@ var particlePosField;
 
 // Shaders
 var v_conf_inator;
+var b_conf_inator;
 var particleTracers;
 var finalRender;
+var advector;
 
 // Variables for final render
 var finalTexture;
@@ -132,11 +135,18 @@ function init_attrib_fields() {
 
     // This just initializes the velocityField with v = < 1,0,0,1 > (i.e fluid initially flows to the right)
     v_conf_inator = new ConfigInator(grid_resolution);
-    v_conf_inator.configure_field(renderer, velocityField.read_buf);
+    v_conf_inator.configure_field(renderer, 0.0, velocityField.read_buf);
+    v_conf_inator.configure_field(renderer, 0.0, velocityField.write_buf);
+
+    b_conf_inator = new ConfigInator(grid_resolution);
+    b_conf_inator.configure_field(renderer, 1.0, boundaryField.read_buf);
+    b_conf_inator.configure_field(renderer, 1.0, boundaryField.write_buf);
 
     // Initialize shaders
     particleTracers = new ParticleTracers(displayConfig.NUM_PARTICLES, grid_resolution);
     finalRender = new FinalRender(grid_resolution);
+    //Breaks for t != 1.0 right now, though the math says it should work for arbitrary timesteps
+    advector = new Advector(1.0, grid_resolution);
 
     // This is for the actual render to the canvas. The finalTexture will be set equal to the values one of the attribute fields
     finalTexture = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
@@ -240,11 +250,15 @@ function render() {
     // }
     
     if (!displayConfig.PAUSED) {
+        // advector.update_timestep(0.01);
+        // velocityField.update_read_buf();
+        advector.advect_texture(renderer, velocityField.read_buf, boundaryField.read_buf, velocityField.write_buf);
+        velocityField.update_read_buf();
         finalRender.renderToTarget(renderer, velocityField.read_buf, finalTexture);
         renderer.render(scene, camera);
     }
     gridHelper.visible = displayConfig.SHOW_GRID;
-    // requestAnimationFrame(render);
+    requestAnimationFrame(render);
 }
 
 render()

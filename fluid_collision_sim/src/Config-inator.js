@@ -13,7 +13,8 @@ export default class ConfigInator {
         this.gridRes = res;
 
         this.uniforms = {
-            // gridRes: {type: "v2", value: this.gridRes},
+            mode: {type: "f", value: 0.0},
+            gridRes: {type: "v2", value: this.gridRes},
             // dataTex: {type: "t"}
             initialVal: {type: "f"}
         }
@@ -51,7 +52,8 @@ export default class ConfigInator {
     //     return data;
     // }
 
-    configure_field(renderer, output) {
+    configure_field(renderer, color_mode, output) {
+        this.uniforms.mode.value = color_mode;
         this.renderer = renderer;
         // this.uniforms.initialVal.value = value;
         // this.input = input;
@@ -66,7 +68,6 @@ export default class ConfigInator {
         // dataTex.needsUpdate = true;
 
         // this.uniforms.attributeValues = dataTex;
-
         this.renderer.setRenderTarget(output);
         this.renderer.render(this.scene, this.camera);
         this.renderer.setRenderTarget(null);
