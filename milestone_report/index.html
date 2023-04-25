@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>
+  body {
+    padding: 100px;
+    width: 1000px;
+    margin: auto;
+    text-align: left;
+    font-weight: 300;
+    font-family: 'Open Sans', sans-serif;
+    color: #121212;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+  c1 {
+    font-family:'Courier New', Courier, monospace;
+  }
+</style>
+<title>CS 184: Final Project Milestone Report</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2023</h1>
+<h1 align="middle">Final Project Milestone Report</h1>
+<h2 align="middle">Tyler Bhadra, Charlie Chen, Maxwell Lo, Victor Zhang</h2>
+
+<br><br>
+
+<div>
+
+<div align="middle">
+    <table style="width:100%">
+        <tr align="center">
+            <td>
+                <img style='border:1px solid #000000' src="images/FluidSim_wip.gif" align="middle" width="500px"/>
+            </td>
+        </tr>
+    </table>
+</div>
+<br><br>
+
+<h2 align="middle">Current Progress</h2>
+<p>
+  Presently we have our main project framework implemented for loading and running fragment shader programs,
+  updating attributes in our grid, and running simulation steps on the GPU. Additionally we also have rudimentary GUI 
+  made with the <c1>dat.gui</c1> JavaScript library. The important parts of our framework include the 
+  <c1>AttributeField.js</c1> class, as well as the main render loop in <c1>main.js</c1> which uses a
+  variety of custom shader program loader classes to run fragment shader programs that update specific 
+  attributes in the grid before rendering the relevant data to the screen.
+</p>
+<br>
+
+<h2 align="middle">Project Framework</h2>
+<p>
+    TODO
+</p>
+<br>
+
+<h2 align="middle">Shaders</h2>
+<p>
+    TODO
+</p>
+<br>
+
+<h2 align="middle">Current Issues</h2>
+<p>
+    TODO
+</p>
+<br>
+
+<h2 align="middle">Updated Plan Going Forward</h2>
+<p>
+  April 25<sup>th</sup>  -  April 30<sup>th</sup>:
+  <ul>
+    <li>Finish the shaders needed for the complete simulation.</li>
+    <li>Work on shaders to visualize density (i.e advection of dye through fluid).</li>
+    <li>Refactor particle shaders so they work within the project framework and update particle positions 
+        according to the velocities in the grid.
+    </li>
+  </ul>
+  May 1<sup>st</sup>  -  May 5<sup>th</sup>:
+  <ul>
+    <li>Implement interactivity (adding/modifying obstacles, adjusting simulation area) and debug this implementation.</li>
+    <li>Finish up the final presentation and record and edit the necessary video and audio for our demo and final report.</li>
+  </ul>
+</p>
+<br>
+
+<!-- <h2 align="middle">Resources</h2>
+<p align="middle"><a href="https://www.dgp.toronto.edu/public_user/stam/reality/Research/pdf/ns.pdf">Jos Stam: Stable Fluids</a></p>
+<p align="middle"><a href="https://physics.weber.edu/schroeder/fluids/">Weber State University Fluid Dynamics Simulation</a></p>
+<p align="middle"><a href="https://eprints.soton.ac.uk/349797/1/v20.pdf">Boundary Data Immersion Method for Cartesian-Grid
+  Simulations of Fluid-Body Interaction Problems</a></p>
+<p align="middle"><a href="https://github.com/weymouth/lily-pad">LilyPad</a></p>
+<br>
+<p align="middle">
+  Currently we are planning on using a combination of JavaScript and WebGL to implement our interactive simulator.
+</p>
+<br> -->
+
+</body>
+</html>
