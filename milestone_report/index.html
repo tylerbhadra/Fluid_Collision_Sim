@@ -47,24 +47,34 @@
 
 <h2 align="middle">Current Progress</h2>
 <p>
-  Presently we have our main project framework implemented for loading and running fragment shader programs,
-  updating attributes in our grid, and running simulation steps on the GPU. Additionally we also have rudimentary GUI 
-  made with the <c1>dat.gui</c1> JavaScript library. The important parts of our framework include the 
-  <c1>AttributeField.js</c1> class, as well as the main render loop in <c1>main.js</c1> which uses a
-  variety of custom shader program loader classes to run fragment shader programs that update specific 
-  attributes in the grid before rendering the relevant data to the screen.
+    Presently we have our main project framework implemented for loading and running fragment shader programs,
+    updating attributes in our grid, and running simulation steps on the GPU. Additionally we also have a rudimentary GUI 
+    made with the <c1>dat.gui</c1> JavaScript library. The important parts of our framework include the 
+    <c1>AttributeField.js</c1> class, as well as the main render loop in <c1>main.js</c1> which uses a
+    variety of custom shader program loader classes to run fragment shader programs that update specific 
+    attributes in the grid before rendering the relevant data to the screen.
 </p>
 <br>
 
 <h2 align="middle">Project Framework</h2>
 <p>
-    TODO
+    The main idea behind our implementation of the eulerian grid solver is to store fluid attributes (such as density and 
+    velocity) in 2 swappable <c1>WebGLRenderTarget</c1> buffers (Defined in <c1>AttributeField.js</c1>). Each fragment shader 
+    has its own dedicated loader class that initializes the uniforms and vertices that are passed into its associated shader 
+    program. These loader classes also set the render target of the <c1>WebGLRenderer</c1> to which updated attribute information is written and stored for 
+    later usage as a texture input to other shader programs handling different fluid attributes. Swapping these buffers 
+    after every render allows us to continually feed the most recent data back into our fragment shaders.
 </p>
 <br>
 
 <h2 align="middle">Shaders</h2>
 <p>
-    TODO
+    Currently, we have not implemented any of the shaders needed for the simulation (Such as shaders for applying advection, 
+    viscous diffusion, external forces, projection, and boundary conditions). We have a rudimentary particle shader implemented
+    (shown above) and hope to use this to visualize the flow of fluid around boundaries/obstacles. As of now, this shader does 
+    not work with our current framework. We plan to refactor it so that it both works well with our current gpu simulation - to - 
+    screen 
+    visualization pipeline and updates positions based on the underlying velocity vector field.
 </p>
 <br>
 
