@@ -70,7 +70,14 @@
 
 <h2 align="middle">Current Issues</h2>
 <p>
-    TODO
+    Initially, we had some trouble with getting the framework set up to be able to render the 
+    particle simulation, as none of us had prior experience working with three.js or WebGL. We 
+    are currently working through understanding the math behind the Navier-Stokes equations and 
+    figuring out how to separate the relevant data into textures that we can calculate inside our 
+    shader code. Additionally, until we implement most of the features (advection, pressure, diffusion, 
+    external forces), our rendered output will be mostly garbage and thus be hard to debug (and because 
+    the shaders are doing work in the gpu, it is difficult to debug in ways that are not just checking 
+    for the expected screen output). 
 </p>
 <br>
 
