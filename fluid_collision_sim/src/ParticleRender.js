@@ -9,13 +9,13 @@ import * as THREE from 'three';
  * For vertex v_i, texture(v_i.x, v_i.y) yields the real position of particle i)
  */
 export default class ParticleRender {
-    constructor(res) {
+    constructor(res, num_particles) {
         this.scene = new THREE.Scene();
         this.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 );
-        this.gridRres = res;
+        var particle_span = Math.sqrt(num_particles);
 
         this.uniforms = {
-            gridRes: {type: "v2", value: this.gridRes},
+            gridRes: {type: "v2", value: res},
             particlePositions: {type: "t", value: null}
         }
 
@@ -32,24 +32,26 @@ export default class ParticleRender {
         // this.plane = new THREE.Mesh(this.geometry, this.material);
         // this.scene.add(this.plane);
 
-        var length = this.gridRes.x * this.gridRes.y;
-        var vertices = new Float32Array( length * 2 );
-        for ( var i = 0; i < length; i++ ) {
+        var len = particle_span * particle_span * 4;
+        var vertices = [];
+        for ( var i = 0; i < len; i++ ) {
  
-            var i2 = i * 2;
-            vertices[ i2 ] = ( i % this.gridRes.x ) / this.gridRes.x ;
-            vertices[ i2 + 1 ] = ( i / this.gridRes.y ) / this.gridRes.y;
+            var i4 = i * 4;
+            vertices[ i4 ] = ( i % particle_span ) / particle_span ;
+            vertices[ i4 + 1 ] = ( i / particle_span ) / particle_span;
+            vertices[ i4 + 2 ] = 0.0;
+            vertices[ i4 + 3 ] = 1.0;
         }
  
-        //create the particles geometry
+        /* Create the particles and add them to the scene */
         this.geometry = new THREE.BufferGeometry();
-        this.geometry.addAttribute( 'position',  new THREE.BufferAttribute( vertices, 3 ) );
-
+        this.geometry.setAttribute( 'position',  new THREE.Float32BufferAttribute( vertices, 4 ) );
         this.particles = new THREE.Points( this.geometry, this.material );
-        this.scene.add(particles);
+        this.scene.add(this.particles);
     
+        /* Add a fadePlane to get a trailing effect for the particles */
         this.fadePlane = new THREE.Mesh(
-            new THREE.PlaneGeometry(window.innerWidth, window.innerHeight),
+            new THREE.PlaneGeometry(2, 2),
             new THREE.MeshBasicMaterial({
                 transparent: true,
                 color: 0xffffff,
@@ -61,11 +63,10 @@ export default class ParticleRender {
     }
 
     renderToTarget(renderer, input, output) {
-        this.renderer = renderer;
         this.uniforms.particlePositions.value = input.texture;
 
-        this.renderer.setRenderTarget(output);
-        this.renderer.render(this.scene, this.camera);
-        this.renderer.setRenderTarget(null);
+        renderer.setRenderTarget(output);
+        renderer.render(this.scene, this.camera);
+        renderer.setRenderTarget(null);
     }
 }

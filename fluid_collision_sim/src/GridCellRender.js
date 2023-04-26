@@ -9,16 +9,15 @@ export default class GridCellRender {
     constructor(res) {
         this.scene = new THREE.Scene();
         this.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 );
-        this.gridRres = res;
 
         this.uniforms = {
-            res: {type: "v2", value: this.gridRes},
+            gridRes: {type: "v2", value: res},
             inputTexture: {type: "t", value: null }
         }
 
         this.material = new THREE.ShaderMaterial({
             uniforms: this.uniforms,
-            fragmentShader: document.getElementById( 'finalRenderFrag' ).innerHTML,
+            fragmentShader: document.getElementById( 'gridCellRenderFrag' ).innerHTML,
             depthWrite: false,
             depthTest: false,
             blending: THREE.NoBlending
@@ -31,11 +30,10 @@ export default class GridCellRender {
     }
 
     renderToTarget(renderer, input, output) {
-        this.renderer = renderer;
         this.uniforms.inputTexture.value = input.texture;
 
-        this.renderer.setRenderTarget(output);
-        this.renderer.render(this.scene, this.camera);
-        this.renderer.setRenderTarget(null);
+        renderer.setRenderTarget(output);
+        renderer.render(this.scene, this.camera);
+        renderer.setRenderTarget(null);
     }
 }

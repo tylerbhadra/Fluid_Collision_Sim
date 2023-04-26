@@ -6,20 +6,19 @@ import * as THREE from 'three';
  * are passed into the shader as a texture uniform and indexed by vUv. 
  */
 export default class ParticleSim {
-    constructor(res, dt) {
+    constructor(res, particle_span, dt) {
         this.scene = new THREE.Scene();
         this.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 );
 
-        //populate a Float32Array of random positions
-        var data = getRandomData( width, height, 256 );
-        //convertes it to a FloatTexture
-        var positions = new THREE.DataTexture( data, width, height, THREE.RGBFormat, THREE.FloatType );
+        /* Store random initial particle positions as DataTexture (of floats, specifically) */
+        var data = this.initParticlePositions( particle_span );
+        var positions = new THREE.DataTexture( data, particle_span, particle_span, THREE.RGBFormat, THREE.FloatType );
         positions.needsUpdate = true;
 
         this.uniforms = {
             gridRes: {type: "v2", value: res},
             dt: {type: "f", value: dt},
-            particlePositions: {type: "t", value: null},
+            particlePositions: {type: "t", value: positions},
             velocityField: {type: "t", value: null}
         }
 
@@ -33,28 +32,50 @@ export default class ParticleSim {
         })
 
         this.geometry = new THREE.BufferGeometry();
-        this.geometry.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( [-1,-1,0,  1,-1,0,  1,1,0,  -1,-1,0,  1, 1, 0,  -1,1,0] ), 3 ) );
-        this.geometry.addAttribute( 'uv', new THREE.BufferAttribute( new Float32Array( [0,1, 1,1, 1,0,   0,1, 1,0, 0,0] ), 2 ) );
+        this.geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( [-1,-1,0,  1,-1,0,  1,1,0,  -1,-1,0,  1, 1, 0,  -1,1,0] , 3 ) );
+        this.geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( [0,1, 1,1, 1,0,   0,1, 1,0, 0,0], 2 ) );
         this.plane = new THREE.Mesh(this.geometry, this.material);
         this.scene.add(this.plane);
     }
 
-    //returns an array of random 3D coordinates
-    getRandomData(width, height, size){
-        var len = width * height * 3;
+    initParticlePositions(particle_span){
+        var len = particle_span * particle_span * 4;
         var data = new Float32Array(len);
-        while( len-- ) {
-            data[len] = ( Math.random() * 2 - 1 ) * size ;
+        for (let i = 0; i < len; i++) {
+            const stride = i * 4;
+        
+            data[ stride ] = (Math.random() * 2 - 1);
+            data[ stride + 1 ] = (Math.random() * 2 - 1);
+            data[ stride + 2 ] = 0;
+            data[ stride + 3 ] = 1.0;
+
+            // data[ stride ] = THREE.MathUtils.randFloatSpread( 2000 );
+            // data[ stride + 1 ] = THREE.MathUtils.randFloatSpread( 2000 );
+            // data[ stride + 2 ] = 0;
+            // data[ stride + 3 ] = 1.0;
+            
+            // var i2 = i * 2;
+            // data[i2] = (Math.random() * 2 - 1) * particle_span;
+            // data[i2 + 1] = (Math.random() * 2 - 1) * particle_span;
         }
         return data;
     }
 
-    renderToTarget(renderer, input, output) {
-        this.renderer = renderer;
-        this.uniforms.particlePositions.value = input.texture;
+    update_positions(newPositions) {
+        this.uniforms.particlePositions.value = newPositions.texture;
+    }
 
-        this.renderer.setRenderTarget(output);
-        this.renderer.render(this.scene, this.camera);
-        this.renderer.setRenderTarget(null);
+    renderToTarget(renderer, velocityField, output) {
+        // this.uniforms.particlePositions.value = particlePos.texture;
+        this.uniforms.velocityField.value = velocityField.texture;
+
+        renderer.setRenderTarget(output);
+        renderer.render(this.scene, this.camera);
+        renderer.setRenderTarget(null);
+
+        // /* Feed new particle positions back into sim shader */
+        // var clone = output.clone();
+        // this.uniforms.particlePositions.value = clone.texture;
+        // clone.dispose();
     }
 }

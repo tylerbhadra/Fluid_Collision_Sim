@@ -3,27 +3,35 @@ import AttributeField from './AttributeField.js';
 import ParticleTracers from './ParticleTracers.js';
 import ConfigInator from './Config-inator.js';
 import GridCellRender from './GridCellRender.js';
+import ParticleSim from './ParticleSim.js';
+import ParticleRender from './ParticleRender.js';
 
 var scene, camera, renderer, dt;
 const BOX_SIZE = 4;
 var grid, gridHelper;
 var grid_resolution = new THREE.Vector2(512, 256);
 
-// Attribute Fields
+/* Attribute Fields */
 var velocityField;
 var boundaryField;
-var particlePosField;
 
-// Shaders
+/* Simulation shader loaders */
 var v_conf_inator;
 var particleTracers;
-var finalRender;
 
-// Variables for final render
-var finalTexture;
-var finalMaterial;
-var finalGeometry;
-var plane;
+/* Particle simulation shader & particle position buffer */
+var particleSim;
+var particlePositions;
+
+/* Shader loaders for final render + texture variables */
+var particleRender;
+var gridCellRender;
+
+/* Variables for canvas/screen render */
+var canvasTex;
+var canvasMaterial;
+var canvasGeometry;
+var canvas;
 
 var displayConfig = {
     // BASIC DISPLAY OPTIONS WITH PLACEHOLDER VALUES -> ADD MORE + DECIDE ON DEFAULT VALUES LATER
@@ -31,7 +39,7 @@ var displayConfig = {
     PRESSURE: 1,
     PRESSURE_ITERATIONS: 10,
     PAUSED: false,
-    NUM_PARTICLES: 150000,
+    NUM_PARTICLES: 15000,
     SHOW_GRID: false, //For debugging
     // Cont.
     // TODO
@@ -77,12 +85,10 @@ function initScene() {
     });
     renderer.autoClear = false;
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
     document.body.appendChild(renderer.domElement);
 
-    // camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
     camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    // camera.position.set( 0, 0, 100 );
-    // camera.lookAt( 0, 0, 0 );
 
     displayConfig.PAUSED = false;
     dt = 0;
@@ -125,32 +131,36 @@ function getGridSquare(x, y) {
 
 function init_attrib_fields() {
 
-    // Initialize attribute fields
+    /* Initialize attribute fields */
     velocityField = new AttributeField(grid_resolution);
     boundaryField = new AttributeField(grid_resolution);
-    particlePosField = new AttributeField(grid_resolution);
 
-    // This just initializes the velocityField with v = < 1,0,0,1 > (i.e fluid initially flows to the right)
+    /* This just initializes the velocityField with v = < 1,0,0,1 > (i.e fluid initially flows to the right) */
     v_conf_inator = new ConfigInator(grid_resolution);
     v_conf_inator.configure_field(renderer, velocityField.read_buf);
 
-    // Initialize shaders
-    particleTracers = new ParticleTracers(displayConfig.NUM_PARTICLES, grid_resolution);
-    // particleSim = new ParticleSim(grid_resolution)
-    finalRender = new GridCellRender(grid_resolution);
+    /* Initialize fluid simulation shader loaders */
 
-    // This is for the actual render to the canvas. The finalTexture will be set equal to the values one of the attribute fields
-    finalTexture = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
-    finalGeometry = new THREE.PlaneGeometry( 2, 2 );
-    finalMaterial =  new THREE.MeshBasicMaterial({map: finalTexture.texture});
-    // finalMaterial = new THREE.ShaderMaterial({
-    //     fragmentShader: document.getElementById( 'configVelocityFrag' ).innerHTML,
-    //     depthWrite: false,
-    //     depthTest: false,
-    //     blending: THREE.NoBlending
-    // })
-    plane = new THREE.Mesh( finalGeometry, finalMaterial );
-    scene.add(plane);
+    /* Initialize particle simulation shader loader and particle positions buffer */
+    // particleTracers = new ParticleTracers(displayConfig.NUM_PARTICLES, grid_resolution);
+    var particleSpan = Math.sqrt(displayConfig.NUM_PARTICLES);
+    var particleSpanVec2 = new THREE.Vector2(particleSpan, particleSpan);
+    particleSim = new ParticleSim(grid_resolution, particleSpan, 1.0);
+    particlePositions = new AttributeField(particleSpanVec2);
+    // particlePositions = new THREE.WebGLRenderTarget( particleSpan, particleSpan, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
+
+    /* Initialize the shader loaders for the canvas/screen render */
+    particleRender = new ParticleRender(grid_resolution, displayConfig.NUM_PARTICLES);
+    gridCellRender = new GridCellRender(grid_resolution);
+
+    /* This is for the actual render to the canvas. The canvasTex will be written to by the gridCellRender (which runs the
+       shader that visualizes one of the grid attributes as colored cells in the grid) or particleRender (which loads the shader
+       that visualizes the movement of the fluid using particles) */
+    canvasTex = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
+    canvasGeometry = new THREE.PlaneGeometry( 2, 2 );
+    canvasMaterial =  new THREE.MeshBasicMaterial({map: canvasTex.texture});
+    canvas = new THREE.Mesh( canvasGeometry, canvasMaterial );
+    scene.add(canvas);
 }
 
 function start() {
@@ -231,23 +241,34 @@ function stop() {
 // obstacleScene.add( circle );
 
 function render() {
-    // Probably implement main simulation step below, update relevant grids/buffers
-    // TODO
-    // particleTracers.renderToTarget(renderer, velocityField.read_buf, null, dt)
-    // particlePosField.update_read_buf();
-
-    // Render updated scene.
-
-
-    // if (!displayConfig.PAUSED) {
-    //     dt += 0.5;
-    //     particleMaterial.uniforms.time.value = dt;
-    //     renderer.render(scene, camera);  
-    //     // renderer.render(obstacleScene, camera); 
-    // }
+    /* Implement main simulation step below, update relevant grids/buffers */
     
+    /* START */
+
+
+    /* END */
+
+    /* Update particle states */
+    particleSim.renderToTarget(renderer, velocityField.read_buf, particlePositions.write_buf, 1.0);
+    particlePositions.update_read_buf();
+    particleSim.update_positions(particlePositions.read_buf);
+
+    /* Render updated scene. */
     if (!displayConfig.PAUSED) {
-        finalRender.renderToTarget(renderer, velocityField.read_buf, finalTexture);
+        // gridCellRender.renderToTarget(renderer, velocityField.read_buf, canvasTex);
+        particleRender.renderToTarget(renderer, particlePositions.read_buf, canvasTex);
+
+        // /* Add a fadePlane to get a trailing effect for the particles */
+        // this.fadePlane = new THREE.Mesh(
+        //     new THREE.PlaneGeometry(2, 2),
+        //     new THREE.MeshBasicMaterial({
+        //         transparent: true,
+        //         color: 0xffffff,
+        //         opacity: 0.1
+        //     })
+        // )
+        // scene.add(this.fadePlane);
+
         renderer.render(scene, camera);
     }
     gridHelper.visible = displayConfig.SHOW_GRID;

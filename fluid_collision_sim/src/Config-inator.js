@@ -52,7 +52,6 @@ export default class ConfigInator {
     // }
 
     configure_field(renderer, output) {
-        this.renderer = renderer;
         // this.uniforms.initialVal.value = value;
         // this.input = input;
 
@@ -67,8 +66,8 @@ export default class ConfigInator {
 
         // this.uniforms.attributeValues = dataTex;
 
-        this.renderer.setRenderTarget(output);
-        this.renderer.render(this.scene, this.camera);
-        this.renderer.setRenderTarget(null);
+        renderer.setRenderTarget(output);
+        renderer.render(this.scene, this.camera);
+        renderer.setRenderTarget(null);
     }
 }

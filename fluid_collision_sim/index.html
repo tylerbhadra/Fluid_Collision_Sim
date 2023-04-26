@@ -29,20 +29,24 @@
       // uniform float initialVal;
 
       void main() {
-        vec2 pixel  = gl_FragCoord.xy / gridRes;
-        gl_FragColor = vec4(gl_FragCoord.xy/gridRes.xy, 0.5, 1.0);
+        vec2 pixel  = gl_FragCoord.xy / gridRes.xy;
+        float vx = pixel.x;
+        float vy = pixel.y;
+
+        gl_FragColor = vec4(vx, vy, 0.0, 1.0);
+        //gl_FragColor = vec4(0.003, 0.0, 0.0, 1.0);
       }
     </script>
-    <script id="finalRenderFrag" type="shader-code">
+    <script id="gridCellRenderFrag" type="shader-code">
       precision mediump float;
 
       uniform vec2 gridRes;
       uniform sampler2D inputTexture;
 
       void main() {
-        vec2 pixel = gl_FragCoord.xy / gridRes.xy;
-        // gl_FragColor = vec4(texture2D(inputTexture, pixel).xyz, 1.0);
-        gl_FragColor = vec4(gl_FragCoord.xy, 0.0, 1.0);
+        vec2 pixel = gl_FragCoord.xy / gridRes;
+        //gl_FragColor = vec4(texture2D(inputTexture, pixel).xyz, 1.0);
+        gl_FragColor = vec4(pixel.y, 0.0, pixel.x, 1.0);
       }
     </script>
     <script id="particleSimVert" type="shader-code">
@@ -66,11 +70,11 @@
       varying vec2 vUv;
 
       void main() {
-        vec2 pos = texture2D(particlePositions, vUv);
-        vec2 velocity = texture2D(velocityField, pos/gridRes);
+        vec2 pos = texture2D(particlePositions, vUv).xy;
+        vec2 velocity = texture2D(velocityField, pos/gridRes).xy;
 
-        pos.x = velocity.x * pos.x;
-        pos.y = velocity.y * pos.y;
+        pos.x += velocity.x * dt;
+        pos.y += velocity.y * dt;
 
         gl_FragColor = vec4(pos, 0.0, 1.0);
       }
@@ -82,11 +86,11 @@
       uniform sampler2D particlePositions;
 
       void main() {
-        vec2 pos = texture2D(particlePositions, position);
+        vec2 pos = texture2D(particlePositions, position.xy).xy;
 
         gl_Position = projectionMatrix * modelViewMatrix * vec4( pos, 0.0, 1.0 );
 
-        gl_PointSize = 4.0;
+        gl_PointSize = 1.0;
       }
     </script>
     <script id="particleRenderFrag" type="shader-code">
@@ -162,6 +166,8 @@
     <script type="module" src="src/particleTracers.js"></script>
     <script type="module" src="src/Config-inator.js"></script>
     <script type="module" src="src/GridCellRender.js"></script>
+    <script type="module" src="src/ParticleSim.js"></script>
+    <script type="module" src="src/ParticleRender.js"></script>
     <script type="module" src="src/main.js"></script>
   </body>
 </html>
