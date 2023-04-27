@@ -9,7 +9,7 @@ import * as THREE from 'three';
  * For vertex v_i, texture(v_i.x, v_i.y) yields the real position of particle i)
  */
 export default class ParticleRender {
-    constructor(res, num_particles) {
+    constructor(res, num_particles, fade) {
         this.scene = new THREE.Scene();
         this.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 );
         var particle_span = Math.sqrt(num_particles);
@@ -55,7 +55,7 @@ export default class ParticleRender {
             new THREE.MeshBasicMaterial({
                 transparent: true,
                 color: 0xffffff,
-                opacity: 0.1
+                opacity: 0.07
             })
         )
 

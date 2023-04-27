@@ -26,6 +26,8 @@ var particlePositions;
 /* Shader loaders for final render + texture variables */
 var particleRender;
 var gridCellRender;
+var particleTex;
+var gridCellTex;
 
 /* Variables for canvas/screen render */
 var canvasTex;
@@ -40,6 +42,7 @@ var displayConfig = {
     PRESSURE_ITERATIONS: 10,
     PAUSED: false,
     NUM_PARTICLES: 15000,
+    PARTICLES_ON: true,
     SHOW_GRID: false, //For debugging
     // Cont.
     // TODO
@@ -68,7 +71,7 @@ function initGUI() {
     gui.add(displayConfig, 'CURL').name("Curl");
     gui.add(displayConfig, 'PRESSURE').name("Pressure");
     gui.add(displayConfig, 'PRESSURE_ITERATIONS', 0, 10).name("Pressure Iterations");
-    gui.add(displayConfig, 'NUM_PARTICLES', 10000, 15000).name("Number of Particles");
+    gui.add(displayConfig, 'PARTICLES_ON').name("Toggle Particles?");
     gui.add(displayConfig, 'PAUSED').name("Pause?");
     gui.add(displayConfig, 'SHOW_GRID').name("Grid");
     // Cont.
@@ -152,13 +155,16 @@ function init_attrib_fields() {
     /* Initialize the shader loaders for the canvas/screen render */
     particleRender = new ParticleRender(grid_resolution, displayConfig.NUM_PARTICLES);
     gridCellRender = new GridCellRender(grid_resolution);
+    particleTex = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
+    gridCellTex = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
+
 
     /* This is for the actual render to the canvas. The canvasTex will be written to by the gridCellRender (which runs the
        shader that visualizes one of the grid attributes as colored cells in the grid) or particleRender (which loads the shader
        that visualizes the movement of the fluid using particles) */
-    canvasTex = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
+    // canvasTex = gridCellTex.texture;
     canvasGeometry = new THREE.PlaneGeometry( 2, 2 );
-    canvasMaterial =  new THREE.MeshBasicMaterial({map: canvasTex.texture});
+    canvasMaterial =  new THREE.MeshBasicMaterial({map: gridCellTex.texture});
     canvas = new THREE.Mesh( canvasGeometry, canvasMaterial );
     scene.add(canvas);
 }
@@ -242,37 +248,34 @@ function stop() {
 
 function render() {
     /* Implement main simulation step below, update relevant grids/buffers */
-    
-    /* START */
-
-
-    /* END */
-
-    /* Update particle states */
-    particleSim.renderToTarget(renderer, velocityField.read_buf, particlePositions.write_buf, 1.0);
-    particlePositions.update_read_buf();
-    particleSim.update_positions(particlePositions.read_buf);
-
-    /* Render updated scene. */
     if (!displayConfig.PAUSED) {
-        // gridCellRender.renderToTarget(renderer, velocityField.read_buf, canvasTex);
-        particleRender.renderToTarget(renderer, particlePositions.read_buf, canvasTex);
+    
+        /* START 
 
-        // /* Add a fadePlane to get a trailing effect for the particles */
-        // this.fadePlane = new THREE.Mesh(
-        //     new THREE.PlaneGeometry(2, 2),
-        //     new THREE.MeshBasicMaterial({
-        //         transparent: true,
-        //         color: 0xffffff,
-        //         opacity: 0.1
-        //     })
-        // )
-        // scene.add(this.fadePlane);
+        Update grid attribute fields here
 
-        renderer.render(scene, camera);
+        END */
+
+        /* Update particle states */
+        particleSim.renderToTarget(renderer, velocityField.read_buf, particlePositions.write_buf, 1.0);
+        particlePositions.update_read_buf();
+        particleSim.update_positions(particlePositions.read_buf);
+
+        /* Render updated scene to approriate texture render targets. */
+        particleRender.renderToTarget(renderer, particlePositions.read_buf, particleTex);
+        gridCellRender.renderToTarget(renderer, velocityField.read_buf, gridCellTex);
     }
-    gridHelper.visible = displayConfig.SHOW_GRID;
+
+    if (displayConfig.PARTICLES_ON) {
+        canvasMaterial.map = particleTex.texture;
+    } else {
+        canvasMaterial.map = gridCellTex.texture;
+    }
+
+    renderer.render(scene, camera);
+
     requestAnimationFrame(render);
+    // gridHelper.visible = displayConfig.SHOW_GRID;
 }
 
 render()

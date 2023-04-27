@@ -30,11 +30,16 @@
 
       void main() {
         vec2 pixel  = gl_FragCoord.xy / gridRes.xy;
-        float vx = pixel.x;
-        float vy = pixel.y;
+        //float vx = pixel.x;
+        //float vy = pixel.y;
 
-        gl_FragColor = vec4(vx, vy, 0.0, 1.0);
+        //gl_FragColor = vec4(vx, vy, 0.0, 1.0);
         //gl_FragColor = vec4(0.003, 0.0, 0.0, 1.0);
+        if (pixel.x < 0.5) {
+          gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        } else {
+          gl_FragColor = vec4(-1.0, 0.0, 0.0, 1.0);
+        }
       }
     </script>
     <script id="gridCellRenderFrag" type="shader-code">
@@ -45,8 +50,9 @@
 
       void main() {
         vec2 pixel = gl_FragCoord.xy / gridRes;
-        //gl_FragColor = vec4(texture2D(inputTexture, pixel).xyz, 1.0);
-        gl_FragColor = vec4(pixel.y, 0.0, pixel.x, 1.0);
+        gl_FragColor = vec4(0.5 + 0.5 * texture2D(inputTexture, pixel).xyz, 1.0);
+        //gl_FragColor = vec4(pixel.y, 0.0, pixel.x, 1.0);
+        //gl_FragColor = vec4(0.5 + 0.5 * pixel.xyz, 1.0);
       }
     </script>
     <script id="particleSimVert" type="shader-code">
@@ -71,10 +77,10 @@
 
       void main() {
         vec2 pos = texture2D(particlePositions, vUv).xy;
-        vec2 velocity = texture2D(velocityField, pos/gridRes).xy;
+        vec2 velocity = texture2D(velocityField, pos * gridRes).xy;
 
-        pos.x += velocity.x * dt;
-        pos.y += velocity.y * dt;
+        pos.x += velocity.x/gridRes.x * dt;
+        pos.y += velocity.y/gridRes.y * dt;
 
         gl_FragColor = vec4(pos, 0.0, 1.0);
       }
@@ -97,9 +103,12 @@
       precision mediump float;
 
       void main() {
-        gl_FragColor = vec4(0.65, 0.80, 0.89, 1.0);
+        gl_FragColor = vec4(0.65, 0.80, 1.0, 1.0);
       }
     </script>
+
+
+
     <script id="particleVert" type="shader-code">
       precision mediump float;
       uniform float time;
@@ -150,6 +159,9 @@
           gl_FragColor = vec4(0.65, 0.80, 0.89, a * vAlpha);
       }
     </script>
+
+
+    
     <script id="boundaryFrag" type="shader-code">
       precision mediump float;
 
