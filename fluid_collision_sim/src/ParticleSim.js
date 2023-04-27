@@ -12,13 +12,15 @@ export default class ParticleSim {
 
         /* Store random initial particle positions as DataTexture (of floats, specifically) */
         var data = this.initParticlePositions( particle_span );
-        var positions = new THREE.DataTexture( data, particle_span, particle_span, THREE.RGBFormat, THREE.FloatType );
+        var positions = new THREE.DataTexture( data, particle_span, particle_span, THREE.RGBAFormat, THREE.FloatType );
         positions.needsUpdate = true;
 
         this.uniforms = {
             gridRes: {type: "v2", value: res},
             dt: {type: "f", value: dt},
+            initialPositions: {type: "t", value: positions},
             particlePositions: {type: "t", value: positions},
+            particleAgeState: {type: "t", value: null},
             velocityField: {type: "t", value: null}
         }
 
@@ -43,20 +45,10 @@ export default class ParticleSim {
         var data = new Float32Array(len);
         for (let i = 0; i < len; i++) {
             const stride = i * 4;
-        
             data[ stride ] = (Math.random() * 2 - 1);
             data[ stride + 1 ] = (Math.random() * 2 - 1);
             data[ stride + 2 ] = 0;
             data[ stride + 3 ] = 1.0;
-
-            // data[ stride ] = THREE.MathUtils.randFloatSpread( 2000 );
-            // data[ stride + 1 ] = THREE.MathUtils.randFloatSpread( 2000 );
-            // data[ stride + 2 ] = 0;
-            // data[ stride + 3 ] = 1.0;
-            
-            // var i2 = i * 2;
-            // data[i2] = (Math.random() * 2 - 1) * particle_span;
-            // data[i2 + 1] = (Math.random() * 2 - 1) * particle_span;
         }
         return data;
     }
@@ -65,9 +57,10 @@ export default class ParticleSim {
         this.uniforms.particlePositions.value = newPositions.texture;
     }
 
-    renderToTarget(renderer, velocityField, output) {
+    renderToTarget(renderer, velocityField, particleAgeState, output) {
         // this.uniforms.particlePositions.value = particlePos.texture;
         this.uniforms.velocityField.value = velocityField.texture;
+        this.uniforms.particleAgeState.value = particleAgeState.texture;
 
         renderer.setRenderTarget(output);
         renderer.render(this.scene, this.camera);

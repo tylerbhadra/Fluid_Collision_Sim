@@ -1,15 +1,15 @@
 import * as THREE from 'three';
 
 /**
- * Actually renders particles to the screen. An alternative to FinalRender which simply assigns a 
- * gl_FragColor to each of the gridRes.x by gridRes.y grid cells before writing to finalTexture.
+ * Actually renders particles to the screen. An alternative to GridCellRender which simply assigns a 
+ * gl_FragColor to each of the gridRes.x by gridRes.y grid cells before writing to gridCellTex.
  * 
  * NOTE: The vertex shader takes a vertex index (x, y), normalized by the grid resolution, 
  * and writes it to the varying vUv (i.e. vertex indices/coords are texture indices/coords. 
  * For vertex v_i, texture(v_i.x, v_i.y) yields the real position of particle i)
  */
 export default class ParticleRender {
-    constructor(res, num_particles, fade) {
+    constructor(res, num_particles) {
         this.scene = new THREE.Scene();
         this.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 );
         var particle_span = Math.sqrt(num_particles);
@@ -27,10 +27,6 @@ export default class ParticleRender {
             depthTest: false,
             blending: THREE.NoBlending
         })
-
-        // this.geometry = new THREE.PlaneGeometry( 2 * (res.x - 2) / res.x, 2 * (res.y - 2) / res.y );
-        // this.plane = new THREE.Mesh(this.geometry, this.material);
-        // this.scene.add(this.plane);
 
         var len = particle_span * particle_span * 4;
         var vertices = [];
@@ -54,8 +50,10 @@ export default class ParticleRender {
             new THREE.PlaneGeometry(2, 2),
             new THREE.MeshBasicMaterial({
                 transparent: true,
-                color: 0xffffff,
-                opacity: 0.07
+                // color: 0x0099ff,
+                // color: 0xffffff,
+                color: 0xcce5ff,
+                opacity: 0.05
             })
         )
 

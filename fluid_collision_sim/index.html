@@ -30,16 +30,16 @@
 
       void main() {
         vec2 pixel  = gl_FragCoord.xy / gridRes.xy;
-        //float vx = pixel.x;
-        //float vy = pixel.y;
+        float vx = pixel.x;
+        float vy = pixel.y;
 
         //gl_FragColor = vec4(vx, vy, 0.0, 1.0);
-        //gl_FragColor = vec4(0.003, 0.0, 0.0, 1.0);
-        if (pixel.x < 0.5) {
-          gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-        } else {
-          gl_FragColor = vec4(-1.0, 0.0, 0.0, 1.0);
-        }
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        //if (pixel.x < 0.5) {
+        //  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        //} else {
+        //  gl_FragColor = vec4(-1.0, 0.0, 0.0, 1.0);
+        //}
       }
     </script>
     <script id="gridCellRenderFrag" type="shader-code">
@@ -53,6 +53,21 @@
         gl_FragColor = vec4(0.5 + 0.5 * texture2D(inputTexture, pixel).xyz, 1.0);
         //gl_FragColor = vec4(pixel.y, 0.0, pixel.x, 1.0);
         //gl_FragColor = vec4(0.5 + 0.5 * pixel.xyz, 1.0);
+      }
+    </script>
+    <script id="particleAgeFrag" type="shader-code">
+      precision mediump float;
+
+      uniform vec2 gridRes;
+      uniform float dt;
+      uniform sampler2D particleAgeState;
+
+      varying vec2 vUv;
+
+      void main() {
+        vec2 age = texture2D(particleAgeState, vUv).xy;
+        age.x = age.x + dt;
+        gl_FragColor = vec4(age.xy, 0.0, 1.0);
       }
     </script>
     <script id="particleSimVert" type="shader-code">
@@ -70,17 +85,27 @@
 
       uniform vec2 gridRes;
       uniform float dt;
+      uniform sampler2D initialPositions;
       uniform sampler2D particlePositions;
+      uniform sampler2D particleAgeState;
       uniform sampler2D velocityField;
 
       varying vec2 vUv;
 
       void main() {
         vec2 pos = texture2D(particlePositions, vUv).xy;
+        vec2 age = texture2D(particleAgeState, vUv).xy;
         vec2 velocity = texture2D(velocityField, pos * gridRes).xy;
 
-        pos.x += velocity.x/gridRes.x * dt;
-        pos.y += velocity.y/gridRes.y * dt;
+        pos.x += 2.0 * velocity.x/gridRes.x * dt;
+        pos.y += 2.0 * velocity.y/gridRes.y * dt;
+
+        float maxAge = age.y;
+        float shouldReset = mod(age.x, maxAge);
+
+        if (shouldReset == 0.0) {
+          pos = texture2D(initialPositions, vUv).xy;
+        } 
 
         gl_FragColor = vec4(pos, 0.0, 1.0);
       }
@@ -96,72 +121,19 @@
 
         gl_Position = projectionMatrix * modelViewMatrix * vec4( pos, 0.0, 1.0 );
 
-        gl_PointSize = 1.0;
+        gl_PointSize = 0.6;
       }
     </script>
     <script id="particleRenderFrag" type="shader-code">
       precision mediump float;
 
       void main() {
-        gl_FragColor = vec4(0.65, 0.80, 1.0, 1.0);
+        gl_FragColor = vec4(0.65, 0.70, 1.0, 1.0);
+        //gl_FragColor = vec4(0.0, 0.0, 0.6, 1.0);
+        //gl_FragColor = vec4(0.0, 0.0, 0.4, 1.0);
+        //gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
       }
     </script>
-
-
-
-    <script id="particleVert" type="shader-code">
-      precision mediump float;
-      uniform float time;
-      uniform vec2 res;
-      uniform sampler2D velocityField;
-
-      varying float vAlpha;
-
-      attribute float lifespan;
-      attribute float offset;
-
-      float custom_smoothstep(float a, float b, float x) {
-        float t = clamp((x - a) / (b - a), 0.0, 1.0);
-     
-        return t * t * (3.0 - (2.0 * t));
-      }
-
-      void main() {
-          vec3 newPos = position;
-          float current = mod(offset + time, lifespan);
-          float percent = current/lifespan;
-          vec2 velocity = texture2D(velocityField, position.xy / res.xy).xy;
-
-          newPos.x += 1.0 * current;
-          newPos.y += 0.0 * current;
-
-          vAlpha = custom_smoothstep(0.0, 0.05, percent);
-          vAlpha -= custom_smoothstep(0.85, 1.0, percent);
-
-          vec4 mvPos = modelViewMatrix * vec4(newPos, 1.0);
-          gl_PointSize = 4.0;
-          gl_Position = projectionMatrix * mvPos;
-      }
-    </script>
-    <script id="particleFrag" type="shader-code">
-      precision mediump float;
-      varying float vAlpha;
-
-      float custom_smoothstep(float a, float b, float x) {
-        float t = clamp((x - a) / (b - a), 0.0, 1.0);
-     
-        return t * t * (3.0 - (2.0 * t));
-      }
-
-      void main() {
-          float d = length(gl_PointCoord - vec2(0.5));
-          float a = 1.0 - custom_smoothstep(0.0, 0.5, d);
-          gl_FragColor = vec4(0.65, 0.80, 0.89, a * vAlpha);
-      }
-    </script>
-
-
-    
     <script id="boundaryFrag" type="shader-code">
       precision mediump float;
 
@@ -175,9 +147,9 @@
     </script>
 
     <script type="module" src="src/AttributeField.js"></script>
-    <script type="module" src="src/particleTracers.js"></script>
     <script type="module" src="src/Config-inator.js"></script>
     <script type="module" src="src/GridCellRender.js"></script>
+    <script type="module" src="src/ParticleAge.js"></script>
     <script type="module" src="src/ParticleSim.js"></script>
     <script type="module" src="src/ParticleRender.js"></script>
     <script type="module" src="src/main.js"></script>
