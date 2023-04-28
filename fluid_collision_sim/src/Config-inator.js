@@ -13,7 +13,6 @@ export default class ConfigInator {
         this.gridRes = res;
 
         this.uniforms = {
-            mode: {type: "f", value: 0.0},
             gridRes: {type: "v2", value: this.gridRes},
             // dataTex: {type: "t"}
             initialVal: {type: "f"}
@@ -28,7 +27,7 @@ export default class ConfigInator {
         })
 
         // this.geometry = new THREE.PlaneGeometry( 2 * (res.x - 2) / res.x, 2 * (res.y - 2) / res.y );
-        this.geometry = new THREE.PlaneGeometry( 2, 2 );
+        this.geometry = new THREE.PlaneGeometry( 2, 2);
         this.plane = new THREE.Mesh(this.geometry, this.material);
         this.scene.add(this.plane);
     }
@@ -52,9 +51,7 @@ export default class ConfigInator {
     //     return data;
     // }
 
-    configure_field(renderer, color_mode, output) {
-        this.uniforms.mode.value = color_mode;
-        this.renderer = renderer;
+    configure_field(renderer, output) {
         // this.uniforms.initialVal.value = value;
         // this.input = input;
 
@@ -68,8 +65,9 @@ export default class ConfigInator {
         // dataTex.needsUpdate = true;
 
         // this.uniforms.attributeValues = dataTex;
-        this.renderer.setRenderTarget(output);
-        this.renderer.render(this.scene, this.camera);
-        this.renderer.setRenderTarget(null);
+
+        renderer.setRenderTarget(output);
+        renderer.render(this.scene, this.camera);
+        renderer.setRenderTarget(null);
     }
 }
