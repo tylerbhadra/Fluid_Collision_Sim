@@ -126,7 +126,7 @@ function render() {
         Update grid attribute fields here
         END */
         /* Update particle states */
-        advector.advect_texture(renderer, velocityField.read_buf, velocityField.read_buf, 0.9, velocityField.write_buf);
+        advector.advect_texture(renderer, velocityField.read_buf, velocityField.read_buf, 1.0, velocityField.write_buf);
         velocityField.update_read_buf();
 
         /* Age particles */
