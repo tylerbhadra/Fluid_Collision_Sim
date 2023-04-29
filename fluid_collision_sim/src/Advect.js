@@ -14,7 +14,8 @@ export default class Advector {
             advected: {type: 't', value: null},
             gridSize: {type: 'v2', value: this.gridRes},
             gridScale: {type: 'f', value: 1.0},
-            dissipation: {type: 'f', value: null}
+            dissipation: {type: 'f', value: null},
+            timestep: {type: 'f', value: 1.0},
           }
 
         this.material = new THREE.ShaderMaterial({
@@ -31,11 +32,12 @@ export default class Advector {
         this.scene.add(this.plane);
     }
 
-    advect_texture(renderer, input_velocity, input_advected, dissipation, output) {
+    advect_texture(renderer, input_velocity, input_advected, dissipation, delta_t, output) {
         this.renderer = renderer;
         this.uniforms.velocity.value = input_velocity.texture;
         this.uniforms.advected.value = input_advected.texture;
         this.uniforms.dissipation.value = dissipation;
+        this.uniforms.timestep.value = delta_t;
         this.renderer.setRenderTarget(output);
         this.renderer.render(this.scene, this.camera);
         this.renderer.setRenderTarget(null);

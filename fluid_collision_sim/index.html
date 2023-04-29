@@ -52,6 +52,7 @@
       uniform vec2 gridSize;
       uniform float gridScale;
       uniform float dissipation;
+      uniform float timestep;
 
       vec2 bilerp(sampler2D texture, vec2 p)
         {
@@ -82,7 +83,7 @@
           float scale = 1.0 / gridScale;
 
           // trace point back in time
-          vec2 p = gl_FragCoord.xy - scale * texture2D(velocity, uv).xy;
+          vec2 p = gl_FragCoord.xy - timestep * scale * texture2D(velocity, uv).xy;
 
           gl_FragColor = vec4(dissipation * bilerp(advected, p), 0.0, 1.0);
       }
