@@ -14,8 +14,8 @@ export default class ConfigInator {
 
         this.uniforms = {
             gridRes: {type: "v2", value: this.gridRes},
-            // dataTex: {type: "t"}
-            initialVal: {type: "f"}
+            // dataTex: {type: "t", value: null},
+            initialVal: {type: "f", value: null}
         }
 
         this.material = new THREE.ShaderMaterial({
@@ -42,7 +42,7 @@ export default class ConfigInator {
     //     for (let i = 0; i < length; i++) {
     //         const stride = i * 4;
 
-    //         data[ stride ] = v/10.0;
+    //         data[ stride ] = i/this.gridRes.x;
     //         data[ stride + 1 ] = 0.0;
     //         data[ stride + 2 ] = 0.0;
     //         data[ stride + 3 ] = 1.0;
@@ -52,20 +52,6 @@ export default class ConfigInator {
     // }
 
     configure_field(renderer, output) {
-        // this.uniforms.initialVal.value = value;
-        // this.input = input;
-
-        // var dataTex = new THREE.DataTexture(
-        //     this.initialize_values(value),
-        //     this.gridRes.x,
-        //     this.gridRes.y,
-        //     THREE.RGBAFormat,
-        //     THREE.FloatType
-        // )
-        // dataTex.needsUpdate = true;
-
-        // this.uniforms.attributeValues = dataTex;
-
         renderer.setRenderTarget(output);
         renderer.render(this.scene, this.camera);
         renderer.setRenderTarget(null);

@@ -41,8 +41,9 @@ var displayConfig = {
     PRESSURE: 1,
     PRESSURE_ITERATIONS: 10,
     PAUSED: false,
-    NUM_PARTICLES: 80000,
-    MAX_PARTICLE_AGE: 36,
+    NUM_PARTICLES: 36000,
+    NUM_RENDER_STEPS: 5,
+    MAX_PARTICLE_AGE: 100,
     DELTA_TIME:  1.0,
     PARTICLES_ON: true,
     // Cont.
@@ -76,8 +77,6 @@ function initScene() {
     document.body.appendChild(renderer.domElement);
 
     camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-
-    displayConfig.PAUSED = false;
 }
 
 function init_attrib_fields() {
@@ -97,7 +96,7 @@ function init_attrib_fields() {
     /* Initialize particle simulation shader loader, particle positions buffer and particle age buffer */
     var particleSpan = Math.sqrt(displayConfig.NUM_PARTICLES);
     var particleSpanVec2 = new THREE.Vector2(particleSpan, particleSpan);
-    particleSim = new ParticleSim(grid_resolution, particleSpan, displayConfig.DELTA_TIME);
+    particleSim = new ParticleSim(grid_resolution, particleSpan, displayConfig.NUM_RENDER_STEPS, displayConfig.DELTA_TIME);
     particleAge = new ParticleAge(grid_resolution, displayConfig.MAX_PARTICLE_AGE, particleSpan, displayConfig.DELTA_TIME);
     particlePositions = new AttributeField(particleSpanVec2);
     particleAgeState = new AttributeField(particleSpanVec2);
@@ -122,10 +121,7 @@ function render() {
     /* Implement main simulation step below, update relevant grids/buffers */
     if (!displayConfig.PAUSED) {
     
-        /* START 
-        Update grid attribute fields here
-        END */
-        /* Update particle states */
+        /* Update grid attributes here */
         advector.advect_texture(renderer, velocityField.read_buf, velocityField.read_buf, 1.0, 1.0, velocityField.write_buf);
         velocityField.update_read_buf();
 
@@ -135,12 +131,19 @@ function render() {
         particleAge.update_ages(particleAgeState.read_buf);
 
         /* Advect particles using forward integration with velocityField */
-        particleSim.renderToTarget(renderer, velocityField.read_buf, particleAgeState.read_buf, particlePositions.write_buf, displayConfig.DELTA_TIME);
-        particlePositions.update_read_buf();
-        particleSim.update_positions(particlePositions.read_buf);
+        for (let i = 0; i < displayConfig.NUM_RENDER_STEPS; i++) {
 
-        /* Render updated scene to approriate texture render targets. */
-        particleRender.renderToTarget(renderer, particlePositions.read_buf, particleTex);
+            /* Render to particle texture displayConfig.NUM_RENDER_STEPS times for smoother trails in the case that a 
+               particle travels more than 1px in one timestep */
+            particleSim.renderToTarget(renderer, velocityField.read_buf, particleAgeState.read_buf, particlePositions.write_buf);
+            particlePositions.update_read_buf();
+            particleSim.update_positions(particlePositions.read_buf);
+
+            /* Render particlePositions to the particleTex render target. */
+            particleRender.renderToTarget(renderer, particlePositions.read_buf, particleTex);
+        }
+
+        /* Render the desired grid attribute values to the gridCellTex render target. */
         gridCellRender.renderToTarget(renderer, velocityField.read_buf, gridCellTex);
     }
 

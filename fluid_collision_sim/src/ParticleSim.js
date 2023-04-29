@@ -6,7 +6,7 @@ import * as THREE from 'three';
  * are passed into the shader as a texture uniform and indexed by vUv. 
  */
 export default class ParticleSim {
-    constructor(res, particle_span, dt) {
+    constructor(res, particle_span, num_steps, dt) {
         this.scene = new THREE.Scene();
         this.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 );
 
@@ -18,6 +18,7 @@ export default class ParticleSim {
         this.uniforms = {
             gridRes: {type: "v2", value: res},
             dt: {type: "f", value: dt},
+            renderSteps: {type: "f", value: num_steps},
             initialPositions: {type: "t", value: positions},
             particlePositions: {type: "t", value: positions},
             particleAgeState: {type: "t", value: null},
@@ -36,6 +37,7 @@ export default class ParticleSim {
         this.geometry = new THREE.BufferGeometry();
         this.geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( [-1,-1,0,  1,-1,0,  1,1,0,  -1,-1,0,  1, 1, 0,  -1,1,0] , 3 ) );
         this.geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( [0,1, 1,1, 1,0,   0,1, 1,0, 0,0], 2 ) );
+        // this.geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( [0,0, 1,0, 1,1,   0,0, 1,1, 0,1], 2 ) );
         this.plane = new THREE.Mesh(this.geometry, this.material);
         this.scene.add(this.plane);
     }
