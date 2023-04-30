@@ -89,6 +89,24 @@
       }
       
     </script>
+    <script id="externalForceFrag" type="shader-code">
+      precision mediump float;
+
+      uniform vec2 gridSize;
+      uniform sampler2D inputTexture;
+      uniform vec3 source;
+      uniform vec2 sourceValue;
+      uniform float radius;
+
+      void main() {
+        float timestep = 1.0;
+        vec2 pixel = gl_FragCoord.xy / gridSize.xy;
+        vec2 mousePosition = mousePress / gridSize.xy;
+        float dist = distance(gl_FragCoord.xy, source.xy);
+        vec2 external_force = timestep * max(radius - dist, 0.0) * sourceValue / gridSize.xy;
+        gl_FragColor = vec4(texture2D(inputTexture, pixel).xy + external_force, 0.0, 1.0);
+      }
+    </script>
     <script id="gridCellRenderFrag" type="shader-code">
       precision mediump float;
 
