@@ -120,12 +120,12 @@ function init_attrib_fields() {
     scene.add(canvas);
 }
 
-var timeStamp = null;
+var prevTime = null;
 var lastX = null;
 var lastY = null;
 function UpdateMousePosition(X,Y){
     var currentTime = Date.now();
-    var deltaTime = currentTime - timeStamp;
+    var deltaTime = currentTime - prevTime;
 
     externalVelocity.source.x = X * grid_resolution.x / window.innerWidth;
     externalVelocity.source.y = Y * grid_resolution.y / window.innerHeight;
@@ -133,16 +133,17 @@ function UpdateMousePosition(X,Y){
     externalVelocity.sourceDirection.x = Math.round((X-lastX) / deltaTime * 100);
     externalVelocity.sourceDirection.y = Math.round((Y-lastY) / deltaTime * 100);
 
-    timeStamp = currentTime;
+    prevTime = currentTime;
     lastX = X;
     lastY = Y;
 }
+
 document.onmousemove = function(event){
-    UpdateMousePosition(event.clientX, window.innerHeight - event.clientY)
+    UpdateMousePosition(event.clientX, window.innerHeight - event.clientY);
 }
 
 document.onmousedown = function(event) {
-    timeStamp = Date.now();
+    prevTime = Date.now();
     lastX = event.clientX;
     lastY = window.innerHeight - event.clientY;
     externalVelocity.source.z = 1.0;
