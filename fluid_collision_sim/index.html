@@ -150,6 +150,7 @@
 
       uniform vec2 gridRes;
       uniform float dt;
+      uniform float renderSteps;
       uniform sampler2D initialPositions;
       uniform sampler2D particlePositions;
       uniform sampler2D particleAgeState;
@@ -160,10 +161,13 @@
       void main() {
         vec2 pos = texture2D(particlePositions, vUv).xy;
         vec2 age = texture2D(particleAgeState, vUv).xy;
-        vec2 velocity = texture2D(velocityField, pos * gridRes).xy;
 
-        pos.x += 2.0 * velocity.x/gridRes.x * dt;
-        pos.y += 2.0 * velocity.y/gridRes.y * dt;
+        // Use pos to index into velocity texture. Positions are randomly generated between -1 and 1. Need to
+        // manipulate pos so its x and y values are between 0 and 1.
+        vec2 velocity = texture2D(velocityField, (pos + 1.0)/ 2.0 ).xy;
+
+        pos.x += (2.0 * velocity.x/gridRes.x * dt)/renderSteps;
+        pos.y += (2.0 * velocity.y/gridRes.y * dt)/renderSteps;
 
         float maxAge = age.y;
         float shouldReset = mod(age.x, maxAge);
@@ -186,7 +190,7 @@
 
         gl_Position = projectionMatrix * modelViewMatrix * vec4( pos, 0.0, 1.0 );
 
-        gl_PointSize = 0.6;
+        gl_PointSize = 1.0;
       }
     </script>
     <script id="particleRenderFrag" type="shader-code">
@@ -209,6 +213,107 @@
         float boundary_exists = 1.0;
         gl_FragColor = vec4(boundary_exists, 0, 0, 1);
       }
+    </script>
+
+    <!-- Jacobi Iteration Fragment Program -->
+    <script id="jacobiFrag" type="shader-code">
+      precision medium float;
+
+      uniform float alpha;  // alpha
+      uniform float rbeta;  // reciprocal beta
+      uniform sampler2D x;  // x vector (Ax = b)
+      uniform sampler2D b;  // b vector (Ax = b)
+
+      uniform vec2 gridSize;
+      uniform float gridScale;
+
+      gl_FragCoord.xy
+
+      void main() {
+        // normalizing vectors
+        vec2 ustep = vec2(1.0, 0.0) / gridSize.x;
+        vec2 vstep = vec2(0.0, 1.0) / gridSize.y;
+        vec2 uv = gl_FragCoord.xy / gridSize.xy;
+
+        // left, right, bottom, and top x samples    
+        float xL = texture2D(x, uv - ustep).x;
+        float xR = texture2D(x, uv + ustep).x;
+        float xB = texture2D(x, uv - vstep).x;
+        float xT = texture2D(x, uv + vstep).x;
+
+        // b sample, from center     
+        float bC = texture2D(b, uv).x;
+
+        // evaluate Jacobi iteration
+        float jac = xL + xR + xB + xT + alpha * bC * rBeta;
+        gl_FragColor = vec4(jac, 0.0, 0.0, 1.0)
+      }
+    </script>
+
+    <!-- Divergence Fragment Program -->
+    <script id="divergenceFrag" type="shader-code">
+      precision mediump float;
+
+      uniform sampler2D w;  // intermediate velocity field 
+
+      uniform vec2 gridSize;
+      uniform float gridScale;
+      
+      void main() {
+        // normalizing vectors
+        vec2 ustep = vec2(1.0, 0.0) / gridSize.x;
+        vec2 vstep = vec2(0.0, 1.0) / gridSize.y;
+        vec2 uv = gl_FragCoord.xy / gridSize.xy;
+
+        // halfrdx = one-half of the reciprocal of the grid scale
+        float halfrdx = 0.5 * 1/ gridScale; 
+
+        // left, right, bottom, and top w samples
+        // Not sure why wB and wT use .y here when everything else uses .x 
+        float wL = texture2D(w, uv - ustep).x;
+        float wR = texture2D(w, uv + ustep).x;
+        float wB = texture2D(w, uv - vstep).y;
+        float wT = texture2D(w, uv + vstep).y;
+        
+        // evaluate divergence
+        float div = halfrdx * ((wR - wL) + (wT - wB);)
+        gl_FragColor = vec4(div, 0.0, 0.0, 1.0)
+      }
+    </script>
+
+    <!-- Gradient Subtraction Fragment Program -->
+    <script id="gradientFrag" type="shader-code">
+      precision mediump float;
+
+      uniform sampler2D p;  // pressure
+      uniform sampler2D w;  // velocity
+
+      uniform vec2 gridSize;
+      uniform float gridScale;
+      
+      void main() {
+        // normalizing vectors
+        vec2 ustep = vec2(1.0, 0.0) / gridSize.x;
+        vec2 vstep = vec2(0.0, 1.0) / gridSize.y;
+        vec2 uv = gl_FragCoord.xy / gridSize.xy;
+
+        // halfrdx = one-half of the reciprocal of the grid scale
+        float halfrdx = 0.5 * 1/ gridScale; 
+
+        // left, right, bottom, and top p samples    
+        float pL = texture2D(p, uv - ustep).x;
+        float pR = texture2D(p, uv + ustep).x;
+        float pB = texture2D(p, uv - vstep).x;
+        float pT = texture2D(p, uv + vstep).x;
+        
+        // evaluate gradient
+        vec2 grad = halfrdx * vec2(pR -pL, pT -pB)
+        vec2 velo = texture2D(w, v).xy
+        gl_FragColor = vec4(velo - grad, 0.0, 1.0)
+      }
+    </script>
+
+
     </script>
 
     <script type="module" src="src/AttributeField.js"></script>
