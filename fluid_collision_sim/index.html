@@ -54,28 +54,22 @@
       uniform float dissipation;
       uniform float timestep;
 
-      vec2 bilerp(sampler2D texture, vec2 p)
-        {
-            // add 0.5 for center of pixel
-            float s = p.x - (floor(p.x - 0.5) + 0.5);
-            float t = p.y - (floor(p.y - 0.5) + 0.5);
+      vec2 bilerp(sampler2D d, vec2 p)
+      {
+          vec4 ij; // i0, j0, i1, j1
+          ij.xy = floor(p - 0.5) + 0.5;
+          ij.zw = ij.xy + 1.0;
 
-            vec4 uv;
-            uv.xy = (floor(p - 0.5) + 0.5) / res.xy;
-            uv.zw= (floor(p - 0.5) + 1.5) / res.xy;
+          vec4 uv = ij / gridSize.xyxy;
+          vec2 d11 = texture2D(d, uv.xy).xy;
+          vec2 d21 = texture2D(d, uv.zy).xy;
+          vec2 d12 = texture2D(d, uv.xw).xy;
+          vec2 d22 = texture2D(d, uv.zw).xy;
 
-            vec2 u00 = texture2D(texture, uv.xy).xy;
-            vec2 u10 = texture2D(texture, uv.zy).xy;
+          vec2 a = p - ij.xy;
 
-            vec2 u0 = mix(u00, u10, s);
-
-            vec2 u01 = texture2D(texture, uv.xw).xy;
-            vec2 u11 = texture2D(texture, uv.zw).xy;
-
-            vec2 u1 =  mix(u01, u11, s);
-
-            return mix(u0, u1, t);
-        }
+          return mix(mix(d11, d21, a.x), mix(d12, d22, a.x), a.y);
+      }
 
       void main()
       {
@@ -95,16 +89,16 @@
       uniform vec2 gridSize;
       uniform sampler2D inputTexture;
       uniform vec3 source;
-      uniform vec2 sourceValue;
+      uniform vec2 sourceDirection;
       uniform float radius;
 
       void main() {
         float timestep = 1.0;
         vec2 pixel = gl_FragCoord.xy / gridSize.xy;
-        vec2 mousePosition = mousePress / gridSize.xy;
         float dist = distance(gl_FragCoord.xy, source.xy);
-        vec2 external_force = timestep * max(radius - dist, 0.0) * sourceValue / gridSize.xy;
-        gl_FragColor = vec4(texture2D(inputTexture, pixel).xy + external_force, 0.0, 1.0);
+        //vec2 direction = (pixel.xy - source.xy);
+        vec2 external_force = source.z * timestep * max(radius - dist, 0.0) * sourceDirection / gridSize.xy;
+        gl_FragColor = vec4(texture2D(inputTexture, pixel).xy + external_force.xy, 0.0, 1.0);
       }
     </script>
     <script id="gridCellRenderFrag" type="shader-code">

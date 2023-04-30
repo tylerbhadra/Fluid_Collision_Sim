@@ -6,6 +6,7 @@ import ParticleSim from './ParticleSim.js';
 import ParticleRender from './ParticleRender.js';
 import ParticleAge from './ParticleAge.js';
 import Advector from './Advect.js';
+import ExternalForce from './External-Forces.js';
 
 var scene, camera, renderer;
 var grid_resolution = new THREE.Vector2(512, 256);
@@ -17,6 +18,7 @@ var boundaryField;
 /* Simulation shader loaders */
 var v_conf_inator;
 var advector;
+var externalVelocity;
 
 /* Particle simulation shader & particle position buffer */
 var particleAge;
@@ -92,6 +94,7 @@ function init_attrib_fields() {
 
     /* Initialize fluid simulation shader loaders */
     advector = new Advector(grid_resolution);
+    externalVelocity = new ExternalForce(grid_resolution);
 
     /* Initialize particle simulation shader loader, particle positions buffer and particle age buffer */
     var particleSpan = Math.sqrt(displayConfig.NUM_PARTICLES);
@@ -117,12 +120,47 @@ function init_attrib_fields() {
     scene.add(canvas);
 }
 
+var timeStamp = null;
+var lastX = null;
+var lastY = null;
+function UpdateMousePosition(X,Y){
+    var currentTime = Date.now();
+    var deltaTime = currentTime - timeStamp;
+
+    externalVelocity.source.x = X * grid_resolution.x / window.innerWidth;
+    externalVelocity.source.y = Y * grid_resolution.y / window.innerHeight;
+
+    externalVelocity.sourceDirection.x = Math.round((X-lastX) / deltaTime * 100);
+    externalVelocity.sourceDirection.y = Math.round((Y-lastY) / deltaTime * 100);
+
+    timeStamp = currentTime;
+    lastX = X;
+    lastY = Y;
+}
+document.onmousemove = function(event){
+    UpdateMousePosition(event.clientX, window.innerHeight - event.clientY)
+}
+
+document.onmousedown = function(event) {
+    timeStamp = Date.now();
+    lastX = event.clientX;
+    lastY = window.innerHeight - event.clientY;
+    externalVelocity.source.z = 1.0;
+}
+
+document.onmouseup = function(event) {
+    externalVelocity.source.z = 0;
+}
+
 function render() {
     /* Implement main simulation step below, update relevant grids/buffers */
     if (!displayConfig.PAUSED) {
     
         /* Update grid attributes here */
         advector.advect_texture(renderer, velocityField.read_buf, velocityField.read_buf, 1.0, 1.0, velocityField.write_buf);
+        velocityField.update_read_buf();
+        
+        externalVelocity.apply_force(renderer, velocityField.read_buf, 5.0, velocityField.write_buf);
         velocityField.update_read_buf();
 
         /* Age particles */
