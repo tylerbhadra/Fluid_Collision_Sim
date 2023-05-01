@@ -49,7 +49,7 @@ var displayConfig = {
     // BASIC DISPLAY OPTIONS WITH PLACEHOLDER VALUES -> ADD MORE + DECIDE ON DEFAULT VALUES LATER
     CURL: 1,
     PRESSURE: 1,
-    PRESSURE_ITERATIONS: 10,
+    PRESSURE_ITERATIONS: 40,
     PAUSED: false,
     NUM_PARTICLES: 64000,
     NUM_RENDER_STEPS: 10,
@@ -66,7 +66,7 @@ function initGUI() {
     // Add display options and toggleables here
     gui.add(displayConfig, 'CURL').name("Curl");
     gui.add(displayConfig, 'PRESSURE').name("Pressure");
-    gui.add(displayConfig, 'PRESSURE_ITERATIONS', 0, 10).name("Pressure Iterations");
+    gui.add(displayConfig, 'PRESSURE_ITERATIONS', 20, 40).name("Pressure Iterations");
     gui.add(displayConfig, 'PARTICLES_ON').name("Toggle Particles?");
     gui.add(displayConfig, 'PAUSED').name("Pause?");
     // Cont.
@@ -98,7 +98,7 @@ function init_attrib_fields() {
     boundaryField = new AttributeField(grid_resolution);
 
     /* This just initializes the velocityField with v = < 1,0,0,1 > (i.e fluid initially flows to the right) */
-    // v_conf_inator = new ConfigInator(grid_resolution);
+    v_conf_inator = new ConfigInator(grid_resolution);
     // v_conf_inator.configure_field(renderer, velocityField.read_buf);
     // v_conf_inator.configure_field(renderer, velocityField.write_buf);
 
@@ -183,8 +183,12 @@ function render() {
         divergenceField.update_read_buf();
 
         /* Using the divergence field, compute the pressure values within each grid cell using Jacobi iteration. */
+        renderer.setRenderTarget(pressureField.read_buf);
+        renderer.clear();
+        renderer.setRenderTarget(null);
+        // v_conf_inator.configure_field(renderer, pressureField.read_buf);
         for (let i = 0; i < displayConfig.PRESSURE_ITERATIONS; i++) {
-            jacobi.compute_pressure(renderer, -1.0, 4.0, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
+            jacobi.compute_pressure(renderer, -1.0, 4.0, divergenceField.read_buf, pressureField.read_buf, pressureField.write_buf);
             pressureField.update_read_buf();
         }
 
@@ -211,7 +215,9 @@ function render() {
         }
 
         /* Render the desired grid attribute values to the gridCellTex render target. */
-        gridCellRender.renderToTarget(renderer, velocityField.read_buf, gridCellTex);
+        // gridCellRender.renderToTarget(renderer, velocityField.read_buf, gridCellTex);
+        // gridCellRender.renderToTarget(renderer, pressureField.read_buf, gridCellTex);
+        gridCellRender.renderToTarget(renderer, divergenceField.read_buf, gridCellTex);
     }
 
     if (displayConfig.PARTICLES_ON) {

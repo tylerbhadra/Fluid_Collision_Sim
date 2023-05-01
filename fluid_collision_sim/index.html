@@ -110,8 +110,7 @@
       void main() {
         vec2 pixel = gl_FragCoord.xy / gridRes;
         gl_FragColor = vec4(0.5 + 0.5 * texture2D(inputTexture, pixel).xyz, 1.0);
-        //gl_FragColor = vec4(pixel.y, 0.0, pixel.x, 1.0);
-        //gl_FragColor = vec4(0.5 + 0.5 * pixel.xyz, 1.0);
+        //gl_FragColor = vec4(texture2D(inputTexture, pixel).xyz, 1.0);
       }
     </script>
     <script id="particleAgeFrag" type="shader-code">
@@ -160,8 +159,8 @@
         // manipulate pos so its x and y values are between 0 and 1.
         vec2 velocity = texture2D(velocityField, (pos + 1.0)/ 2.0 ).xy;
 
-        pos.x += (2.0 * velocity.x/gridRes.x * dt)/renderSteps;
-        pos.y += (2.0 * velocity.y/gridRes.y * dt)/renderSteps;
+        pos.x += (velocity.x/gridRes.x * dt)/renderSteps;
+        pos.y += (velocity.y/gridRes.y * dt)/renderSteps;
 
         float maxAge = age.y;
         float shouldReset = mod(age.x, maxAge);
@@ -218,17 +217,15 @@
 
     <!-- Jacobi Iteration Fragment Program -->
     <script id="jacobiFrag" type="shader-code">
-      precision medium float;
+      precision mediump float;
 
       uniform float alpha;  // alpha
-      uniform float rbeta;  // reciprocal beta
+      uniform float rBeta;  // reciprocal beta
       uniform sampler2D x;  // x vector (Ax = b)
       uniform sampler2D b;  // b vector (Ax = b)
 
       uniform vec2 gridSize;
       uniform float gridScale;
-
-      gl_FragCoord.xy
 
       void main() {
         // normalizing vectors
@@ -247,7 +244,7 @@
 
         // evaluate Jacobi iteration
         float jac = xL + xR + xB + xT + alpha * bC * rBeta;
-        gl_FragColor = vec4(jac, 0.0, 0.0, 1.0)
+        gl_FragColor = vec4(jac, 0.0, 0.0, 1.0);
       }
     </script>
 
@@ -267,7 +264,7 @@
         vec2 uv = gl_FragCoord.xy / gridSize.xy;
 
         // halfrdx = one-half of the reciprocal of the grid scale
-        float halfrdx = 0.5 * 1/ gridScale; 
+        float halfrdx = 0.5 * 1.0/ gridScale; 
 
         // left, right, bottom, and top w samples
         // Not sure why wB and wT use .y here when everything else uses .x 
@@ -277,7 +274,7 @@
         float wT = texture2D(w, uv + vstep).y;
         
         // evaluate divergence
-        float div = halfrdx * (wR - wL) + (wT - wB);
+        float div = halfrdx * ((wR - wL) + (wT - wB));
         gl_FragColor = vec4(div, 0.0, 0.0, 1.0);
       }
     </script>
@@ -299,7 +296,7 @@
         vec2 uv = gl_FragCoord.xy / gridSize.xy;
 
         // halfrdx = one-half of the reciprocal of the grid scale
-        float halfrdx = 0.5 * 1/ gridScale; 
+        float halfrdx = 0.5 * 1.0/ gridScale; 
 
         // left, right, bottom, and top p samples    
         float pL = texture2D(p, uv - ustep).x;
@@ -308,9 +305,9 @@
         float pT = texture2D(p, uv + vstep).x;
         
         // evaluate gradient
-        vec2 grad = halfrdx * vec2(pR -pL, pT -pB)
-        vec2 velo = texture2D(w, v).xy
-        gl_FragColor = vec4(velo - grad, 0.0, 1.0)
+        vec2 grad = halfrdx * vec2(pR -pL, pT -pB);
+        vec2 velo = texture2D(w, uv).xy;
+        gl_FragColor = vec4(velo - grad, 0.0, 1.0);
       }
     </script>
 

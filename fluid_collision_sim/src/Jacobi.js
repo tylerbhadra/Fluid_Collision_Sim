@@ -39,7 +39,6 @@ export default class Jacobi {
         this.uniforms.b.value = b.texture;
   
         renderer.setRenderTarget(output);
-        renderer.clear();
         renderer.render(this.scene, this.camera);
         renderer.setRenderTarget(null);
     }

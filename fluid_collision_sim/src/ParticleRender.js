@@ -54,7 +54,7 @@ export default class ParticleRender {
                 // color: 0x0099ff,
                 // color: 0xffffff,
                 color: 0xcce5ff,
-                opacity: 0.005
+                opacity: 0.008
             })
         )
 
