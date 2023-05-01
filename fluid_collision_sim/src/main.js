@@ -173,6 +173,12 @@ function render() {
         /* Advect velocity through the fluid */
         advector.advect_texture(renderer, velocityField.read_buf, velocityField.read_buf, 1.0, 1.0, velocityField.write_buf);
         velocityField.update_read_buf();
+
+        /* Diffusion Step? */
+        // for (let i = 0; i < displayConfig.PRESSURE_ITERATIONS; i++) {
+        //     jacobi.compute_pressure(renderer, 1.0, 0.25, velocityField.read_buf, velocityField.read_buf, velocityField.write_buf);
+        //     velocityField.update_read_buf();
+        // }
         
         /* Apply external forces */
         externalVelocity.apply_force(renderer, velocityField.read_buf, 15.0, velocityField.write_buf);
@@ -188,13 +194,14 @@ function render() {
         renderer.setRenderTarget(null);
         // v_conf_inator.configure_field(renderer, pressureField.read_buf);
         for (let i = 0; i < displayConfig.PRESSURE_ITERATIONS; i++) {
-            jacobi.compute_pressure(renderer, -1.0, 4.0, divergenceField.read_buf, pressureField.read_buf, pressureField.write_buf);
+            // jacobi.compute_pressure(renderer, -1.0, 4, divergenceField.read_buf, pressureField.read_buf, pressureField.write_buf);
+            jacobi.compute_pressure(renderer, -1.0, 0.25, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
             pressureField.update_read_buf();
         }
 
         /* Projection step => Subract the pressure gradient from the intermediate velocity field to enforce incompressibility. */
-        // projector.subtract_gradient(renderer, pressureField.read_buf, velocityField.read_buf, velocityField.write_buf);
-        // velocityField.update_read_buf();
+        projector.subtract_gradient(renderer, pressureField.read_buf, velocityField.read_buf, velocityField.write_buf);
+        velocityField.update_read_buf();
 
         /* Age particles */
         particleAge.renderToTarget(renderer, particleAgeState.write_buf);
