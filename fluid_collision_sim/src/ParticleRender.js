@@ -16,7 +16,8 @@ export default class ParticleRender {
 
         this.uniforms = {
             gridRes: {type: "v2", value: res},
-            particlePositions: {type: "t", value: null}
+            particlePositions: {type: "t", value: null},
+            velocityField: {type: "t", value: null}
         }
 
         this.material = new THREE.ShaderMaterial({
@@ -53,15 +54,16 @@ export default class ParticleRender {
                 // color: 0x0099ff,
                 // color: 0xffffff,
                 color: 0xcce5ff,
-                opacity: 0.01
+                opacity: 0.005
             })
         )
 
         this.scene.add(this.fadePlane);
     }
 
-    renderToTarget(renderer, input, output) {
-        this.uniforms.particlePositions.value = input.texture;
+    renderToTarget(renderer, particlePositions, velocityField, output) {
+        this.uniforms.particlePositions.value = particlePositions.texture;
+        this.uniforms.velocityField.value = velocityField.texture;
 
         renderer.setRenderTarget(output);
         renderer.render(this.scene, this.camera);

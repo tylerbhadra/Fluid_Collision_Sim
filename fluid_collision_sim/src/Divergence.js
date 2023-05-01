@@ -29,12 +29,11 @@ export default class Divergence {
         this.scene.add(this.plane);
     }
 
-    jacobi_texture(renderer, w, output) {
-        this.renderer = renderer;
-        this.uniforms.w = w;
+    compute_divergence(renderer, w, output) {
+        this.uniforms.w.value = w.texture;
   
-        this.renderer.setRenderTarget(output);
-        this.renderer.render(this.scene, this.camera);
-        this.renderer.setRenderTarget(null);
+        renderer.setRenderTarget(output);
+        renderer.render(this.scene, this.camera);
+        renderer.setRenderTarget(null);
     }
 }

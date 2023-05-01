@@ -7,18 +7,26 @@ import ParticleRender from './ParticleRender.js';
 import ParticleAge from './ParticleAge.js';
 import Advector from './Advect.js';
 import ExternalForce from './External-Forces.js';
+import Divergence from './Divergence.js';
+import Jacobi from './Jacobi.js';
+import Gradient from './Gradient.js';
 
 var scene, camera, renderer;
 var grid_resolution = new THREE.Vector2(512, 256);
 
 /* Attribute Fields */
 var velocityField;
+var divergenceField;
 var boundaryField;
+var pressureField;
 
 /* Simulation shader loaders */
 var v_conf_inator;
 var advector;
 var externalVelocity;
+var divergence2D;
+var jacobi;
+var projector;
 
 /* Particle simulation shader & particle position buffer */
 var particleAge;
@@ -43,8 +51,8 @@ var displayConfig = {
     PRESSURE: 1,
     PRESSURE_ITERATIONS: 10,
     PAUSED: false,
-    NUM_PARTICLES: 36000,
-    NUM_RENDER_STEPS: 5,
+    NUM_PARTICLES: 64000,
+    NUM_RENDER_STEPS: 10,
     MAX_PARTICLE_AGE: 100,
     DELTA_TIME:  1.0,
     PARTICLES_ON: true,
@@ -85,16 +93,21 @@ function init_attrib_fields() {
 
     /* Initialize attribute fields */
     velocityField = new AttributeField(grid_resolution);
+    divergenceField = new AttributeField(grid_resolution);
+    pressureField = new AttributeField(grid_resolution);
     boundaryField = new AttributeField(grid_resolution);
 
     /* This just initializes the velocityField with v = < 1,0,0,1 > (i.e fluid initially flows to the right) */
-    v_conf_inator = new ConfigInator(grid_resolution);
-    v_conf_inator.configure_field(renderer, velocityField.read_buf);
-    v_conf_inator.configure_field(renderer, velocityField.write_buf);
+    // v_conf_inator = new ConfigInator(grid_resolution);
+    // v_conf_inator.configure_field(renderer, velocityField.read_buf);
+    // v_conf_inator.configure_field(renderer, velocityField.write_buf);
 
     /* Initialize fluid simulation shader loaders */
     advector = new Advector(grid_resolution);
     externalVelocity = new ExternalForce(grid_resolution);
+    divergence2D = new Divergence(grid_resolution);
+    jacobi = new Jacobi(grid_resolution);
+    projector = new Gradient(grid_resolution);
 
     /* Initialize particle simulation shader loader, particle positions buffer and particle age buffer */
     var particleSpan = Math.sqrt(displayConfig.NUM_PARTICLES);
@@ -156,13 +169,28 @@ document.onmouseup = function(event) {
 function render() {
     /* Implement main simulation step below, update relevant grids/buffers */
     if (!displayConfig.PAUSED) {
-    
-        /* Update grid attributes here */
+
+        /* Advect velocity through the fluid */
         advector.advect_texture(renderer, velocityField.read_buf, velocityField.read_buf, 1.0, 1.0, velocityField.write_buf);
         velocityField.update_read_buf();
         
-        externalVelocity.apply_force(renderer, velocityField.read_buf, 5.0, velocityField.write_buf);
+        /* Apply external forces */
+        externalVelocity.apply_force(renderer, velocityField.read_buf, 15.0, velocityField.write_buf);
         velocityField.update_read_buf();
+
+        /* Calculate the divergence of the intermediate velocity field. */
+        divergence2D.compute_divergence(renderer, velocityField.read_buf, divergenceField.write_buf);
+        divergenceField.update_read_buf();
+
+        /* Using the divergence field, compute the pressure values within each grid cell using Jacobi iteration. */
+        for (let i = 0; i < displayConfig.PRESSURE_ITERATIONS; i++) {
+            jacobi.compute_pressure(renderer, -1.0, 4.0, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
+            pressureField.update_read_buf();
+        }
+
+        /* Projection step => Subract the pressure gradient from the intermediate velocity field to enforce incompressibility. */
+        // projector.subtract_gradient(renderer, pressureField.read_buf, velocityField.read_buf, velocityField.write_buf);
+        // velocityField.update_read_buf();
 
         /* Age particles */
         particleAge.renderToTarget(renderer, particleAgeState.write_buf);
@@ -179,7 +207,7 @@ function render() {
             particleSim.update_positions(particlePositions.read_buf);
 
             /* Render particlePositions to the particleTex render target. */
-            particleRender.renderToTarget(renderer, particlePositions.read_buf, particleTex);
+            particleRender.renderToTarget(renderer, particlePositions.read_buf, velocityField.read_buf, particleTex);
         }
 
         /* Render the desired grid attribute values to the gridCellTex render target. */

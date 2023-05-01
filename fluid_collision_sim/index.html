@@ -98,7 +98,7 @@
         float dist = distance(gl_FragCoord.xy, source.xy);
         //vec2 direction = (pixel.xy - source.xy);
         vec2 external_force = source.z * timestep * max(radius - dist, 0.0) * sourceDirection / gridSize.xy;
-        gl_FragColor = vec4(texture2D(inputTexture, pixel).xy + external_force.xy, 0.0, 1.0);
+        gl_FragColor = vec4(texture2D(inputTexture, pixel).xy + 4.0 * external_force.xy, 0.0, 1.0);
       }
     </script>
     <script id="gridCellRenderFrag" type="shader-code">
@@ -178,9 +178,14 @@
 
       uniform vec2 gridRes;
       uniform sampler2D particlePositions;
+      uniform sampler2D velocityField;
+
+      varying float v_magnitude;
 
       void main() {
         vec2 pos = texture2D(particlePositions, position.xy).xy;
+        vec2 velocity = texture2D(velocityField, (pos + 1.0)/2.0 ).xy;
+        v_magnitude = clamp(dot(velocity, velocity) + 0.7, 0.0, 1.0);
 
         gl_Position = projectionMatrix * modelViewMatrix * vec4( pos, 0.0, 1.0 );
 
@@ -190,8 +195,10 @@
     <script id="particleRenderFrag" type="shader-code">
       precision mediump float;
 
+      varying float v_magnitude;
+
       void main() {
-        gl_FragColor = vec4(0.65, 0.70, 1.0, 1.0);
+        gl_FragColor = vec4(0.65, 0.65 + v_magnitude/5.0, 1.0, 1.0);
         //gl_FragColor = vec4(0.0, 0.0, 0.6, 1.0);
         //gl_FragColor = vec4(0.0, 0.0, 0.4, 1.0);
         //gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
@@ -270,8 +277,8 @@
         float wT = texture2D(w, uv + vstep).y;
         
         // evaluate divergence
-        float div = halfrdx * ((wR - wL) + (wT - wB);)
-        gl_FragColor = vec4(div, 0.0, 0.0, 1.0)
+        float div = halfrdx * (wR - wL) + (wT - wB);
+        gl_FragColor = vec4(div, 0.0, 0.0, 1.0);
       }
     </script>
 
@@ -316,6 +323,10 @@
     <script type="module" src="src/ParticleAge.js"></script>
     <script type="module" src="src/ParticleSim.js"></script>
     <script type="module" src="src/ParticleRender.js"></script>
+    <script type="module" src="src/Jacobi.js"></script>
+    <script type="module" src="src/Gradient.js"></script>
+    <script type="module" src="src/Divergence.js"></script>
+    <script type="module" src="src/External-Forces.js"></script>
     <script type="module" src="src/main.js"></script>
   </body>
 </html>

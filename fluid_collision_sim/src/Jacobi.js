@@ -32,15 +32,15 @@ export default class Jacobi {
         this.scene.add(this.plane);
     }
 
-    jacobi_texture(renderer, alpha, rbeta, x, b, output) {
-        this.renderer = renderer;
-        this.uniforms.alpha = alpha;
-        this.uniforms.rbeta = rbeta;
-        this.uniforms.x = x;
-        this.uniforms.b = b;
+    compute_pressure(renderer, alpha, rbeta, x, b, output) {
+        this.uniforms.alpha.value = alpha;
+        this.uniforms.rbeta.value = rbeta;
+        this.uniforms.x.value = x.texture;
+        this.uniforms.b.value = b.texture;
   
-        this.renderer.setRenderTarget(output);
-        this.renderer.render(this.scene, this.camera);
-        this.renderer.setRenderTarget(null);
+        renderer.setRenderTarget(output);
+        renderer.clear();
+        renderer.render(this.scene, this.camera);
+        renderer.setRenderTarget(null);
     }
 }

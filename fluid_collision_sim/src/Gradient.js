@@ -30,13 +30,12 @@ export default class Gradient {
         this.scene.add(this.plane);
     }
 
-    jacobi_texture(renderer, p, w, output) {
-        this.renderer = renderer;
-        this.uniforms.p = p;
-        this.uniforms.w = w;
+    subtract_gradient(renderer, p, w, output) {
+        this.uniforms.p.value = p.texture;
+        this.uniforms.w.value = w.texture;
   
-        this.renderer.setRenderTarget(output);
-        this.renderer.render(this.scene, this.camera);
-        this.renderer.setRenderTarget(null);
+        renderer.setRenderTarget(output);
+        renderer.render(this.scene, this.camera);
+        renderer.setRenderTarget(null);
     }
 }
