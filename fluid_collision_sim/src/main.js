@@ -49,9 +49,10 @@ var displayConfig = {
     // BASIC DISPLAY OPTIONS WITH PLACEHOLDER VALUES -> ADD MORE + DECIDE ON DEFAULT VALUES LATER
     JACOBI_ITERATIONS: 30,
     PAUSED: false,
-    NUM_PARTICLES: 64000,
-    NUM_RENDER_STEPS: 10,
+    NUM_PARTICLES: 25000,
+    NUM_RENDER_STEPS: 5,
     MAX_PARTICLE_AGE: 100,
+    V_SCALE: 20,
     DELTA_TIME:  1.0,
     PARTICLES_ON: true,
     LAYER: "Fluid"
@@ -60,7 +61,7 @@ var displayConfig = {
 };
 
 function initGUI() {
-    var gui = new dat.GUI( { width: 300 } );
+    var gui = new dat.GUI( { width: 400 } );
 
     // Add display options and toggleables here
     // gui.add(displayConfig, 'PARTICLES_ON').name("Toggle Particles?");
@@ -71,7 +72,8 @@ function initGUI() {
         "Pressure",
         "Divergence"
     ]).name("Layer");
-    gui.add(displayConfig, 'JACOBI_ITERATIONS', 20, 40).name("Jacobi Iterations");
+    gui.add(displayConfig, 'V_SCALE', 10, 50).name("Velocity Scaling Term");
+    gui.add(displayConfig, 'JACOBI_ITERATIONS', 20, 60).name("Jacobi Iterations");
 
     // Cont.
     // TODO
@@ -185,7 +187,7 @@ function render() {
         }
         
         /* Apply external forces */
-        externalVelocity.apply_force(renderer, velocityField.read_buf, 15.0, velocityField.write_buf);
+        externalVelocity.apply_force(renderer, velocityField.read_buf, 5.0, velocityField.write_buf);
         velocityField.update_read_buf();
 
         /* Calculate the divergence of the intermediate velocity field. */
@@ -196,11 +198,8 @@ function render() {
         renderer.setRenderTarget(pressureField.read_buf);
         renderer.clear();
         renderer.setRenderTarget(null);
-        // v_conf_inator.configure_field(renderer, pressureField.read_buf);
         for (let i = 0; i < displayConfig.JACOBI_ITERATIONS; i++) {
-            // jacobi.compute(renderer, -1.0, 4, divergenceField.read_buf, pressureField.read_buf, pressureField.write_buf);
             jacobi.compute(renderer, -1.0, 0.25, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
-            // jacobi.compute(renderer, -1.0, 4, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
             pressureField.update_read_buf();
         }
 
@@ -218,7 +217,7 @@ function render() {
 
             /* Render to particle texture displayConfig.NUM_RENDER_STEPS times for smoother trails in the case that a 
                particle travels more than 1px in one timestep */
-            particleSim.renderToTarget(renderer, velocityField.read_buf, particleAgeState.read_buf, particlePositions.write_buf);
+            particleSim.renderToTarget(renderer, velocityField.read_buf, particleAgeState.read_buf, displayConfig.V_SCALE, particlePositions.write_buf);
             particlePositions.update_read_buf();
             particleSim.update_positions(particlePositions.read_buf);
 

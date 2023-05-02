@@ -52,8 +52,8 @@ export default class ParticleRender {
             new THREE.MeshBasicMaterial({
                 transparent: true,
                 // color: 0x0099ff,
-                // color: 0xffffff,
-                color: 0xcce5ff,
+                color: 0xffffff,
+                // color: 0xcce5ff,
                 opacity: 0.008
             })
         )

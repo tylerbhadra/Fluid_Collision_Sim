@@ -18,6 +18,7 @@ export default class ParticleSim {
         this.uniforms = {
             gridRes: {type: "v2", value: res},
             dt: {type: "f", value: dt},
+            v_scale: {type: "f", value: null},
             renderSteps: {type: "f", value: num_steps},
             initialPositions: {type: "t", value: positions},
             particlePositions: {type: "t", value: positions},
@@ -37,7 +38,6 @@ export default class ParticleSim {
         this.geometry = new THREE.BufferGeometry();
         this.geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( [-1,-1,0,  1,-1,0,  1,1,0,  -1,-1,0,  1, 1, 0,  -1,1,0] , 3 ) );
         this.geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( [0,1, 1,1, 1,0,   0,1, 1,0, 0,0], 2 ) );
-        // this.geometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( [0,0, 1,0, 1,1,   0,0, 1,1, 0,1], 2 ) );
         this.plane = new THREE.Mesh(this.geometry, this.material);
         this.scene.add(this.plane);
     }
@@ -59,18 +59,13 @@ export default class ParticleSim {
         this.uniforms.particlePositions.value = newPositions.texture;
     }
 
-    renderToTarget(renderer, velocityField, particleAgeState, output) {
-        // this.uniforms.particlePositions.value = particlePos.texture;
+    renderToTarget(renderer, velocityField, particleAgeState, vScale, output) {
         this.uniforms.velocityField.value = velocityField.texture;
         this.uniforms.particleAgeState.value = particleAgeState.texture;
+        this.uniforms.v_scale.value = vScale;
 
         renderer.setRenderTarget(output);
         renderer.render(this.scene, this.camera);
         renderer.setRenderTarget(null);
-
-        // /* Feed new particle positions back into sim shader */
-        // var clone = output.clone();
-        // this.uniforms.particlePositions.value = clone.texture;
-        // clone.dispose();
     }
 }
