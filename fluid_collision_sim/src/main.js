@@ -47,16 +47,14 @@ var canvas;
 
 var displayConfig = {
     // BASIC DISPLAY OPTIONS WITH PLACEHOLDER VALUES -> ADD MORE + DECIDE ON DEFAULT VALUES LATER
-    CURL: 1,
-    PRESSURE: 1,
-    PRESSURE_ITERATIONS: 40,
+    JACOBI_ITERATIONS: 40,
     PAUSED: false,
     NUM_PARTICLES: 64000,
     NUM_RENDER_STEPS: 10,
     MAX_PARTICLE_AGE: 100,
     DELTA_TIME:  1.0,
     PARTICLES_ON: true,
-    LAYER: "Velocity"
+    LAYER: "Fluid"
     // Cont.
     // TODO
 };
@@ -65,16 +63,16 @@ function initGUI() {
     var gui = new dat.GUI( { width: 300 } );
 
     // Add display options and toggleables here
-    gui.add(displayConfig, 'CURL').name("Curl");
-    gui.add(displayConfig, 'PRESSURE').name("Pressure");
-    gui.add(displayConfig, 'PRESSURE_ITERATIONS', 20, 40).name("Pressure Iterations");
-    gui.add(displayConfig, 'PARTICLES_ON').name("Toggle Particles?");
+    // gui.add(displayConfig, 'PARTICLES_ON').name("Toggle Particles?");
     gui.add(displayConfig, 'PAUSED').name("Pause?");
     gui.add(displayConfig, "LAYER", [
+        "Fluid",
         "Velocity",
         "Pressure",
         "Divergence"
     ]).name("Layer");
+    gui.add(displayConfig, 'JACOBI_ITERATIONS', 20, 40).name("Jacobi Iterations");
+
     // Cont.
     // TODO
 }
@@ -181,10 +179,10 @@ function render() {
         velocityField.update_read_buf();
 
         /* Diffusion Step? */
-        // for (let i = 0; i < displayConfig.PRESSURE_ITERATIONS; i++) {
-        //     jacobi.compute_pressure(renderer, 1.0, 0.25, velocityField.read_buf, velocityField.read_buf, velocityField.write_buf);
-        //     velocityField.update_read_buf();
-        // }
+        for (let i = 0; i < displayConfig.JACOBI_ITERATIONS; i++) {
+            jacobi.compute_pressure(renderer, 1.0, 0.25, velocityField.read_buf, velocityField.read_buf, velocityField.write_buf);
+            velocityField.update_read_buf();
+        }
         
         /* Apply external forces */
         externalVelocity.apply_force(renderer, velocityField.read_buf, 15.0, velocityField.write_buf);
@@ -199,7 +197,7 @@ function render() {
         renderer.clear();
         renderer.setRenderTarget(null);
         // v_conf_inator.configure_field(renderer, pressureField.read_buf);
-        for (let i = 0; i < displayConfig.PRESSURE_ITERATIONS; i++) {
+        for (let i = 0; i < displayConfig.JACOBI_ITERATIONS; i++) {
             // jacobi.compute_pressure(renderer, -1.0, 4, divergenceField.read_buf, pressureField.read_buf, pressureField.write_buf);
             jacobi.compute_pressure(renderer, -1.0, 0.25, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
             // jacobi.compute_pressure(renderer, -1.0, 4, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
@@ -231,13 +229,19 @@ function render() {
         /* Render the desired grid attribute values to the gridCellTex render target. */
         var toRender = displayConfig.LAYER;
         switch(toRender) {
+            case "Fluid":
+                displayConfig.PARTICLES_ON = true;
+                break;
             case "Velocity":
+                displayConfig.PARTICLES_ON = false;
                 gridCellRender.renderToTarget(renderer, velocityField.read_buf, gridCellTex);
                 break;
             case "Pressure":
+                displayConfig.PARTICLES_ON = false;
                 gridCellRender.renderToTarget(renderer, pressureField.read_buf, gridCellTex);
                 break;
             case "Divergence":
+                displayConfig.PARTICLES_ON = false;
                 gridCellRender.renderToTarget(renderer, divergenceField.read_buf, gridCellTex);
                 break;
             default:
