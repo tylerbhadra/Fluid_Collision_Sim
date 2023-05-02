@@ -56,6 +56,7 @@ var displayConfig = {
     MAX_PARTICLE_AGE: 100,
     DELTA_TIME:  1.0,
     PARTICLES_ON: true,
+    LAYER: "Velocity"
     // Cont.
     // TODO
 };
@@ -69,6 +70,11 @@ function initGUI() {
     gui.add(displayConfig, 'PRESSURE_ITERATIONS', 20, 40).name("Pressure Iterations");
     gui.add(displayConfig, 'PARTICLES_ON').name("Toggle Particles?");
     gui.add(displayConfig, 'PAUSED').name("Pause?");
+    gui.add(displayConfig, "LAYER", [
+        "Velocity",
+        "Pressure",
+        "Divergence"
+    ]).name("Layer");
     // Cont.
     // TODO
 }
@@ -196,6 +202,7 @@ function render() {
         for (let i = 0; i < displayConfig.PRESSURE_ITERATIONS; i++) {
             // jacobi.compute_pressure(renderer, -1.0, 4, divergenceField.read_buf, pressureField.read_buf, pressureField.write_buf);
             jacobi.compute_pressure(renderer, -1.0, 0.25, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
+            // jacobi.compute_pressure(renderer, -1.0, 4, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
             pressureField.update_read_buf();
         }
 
@@ -222,9 +229,23 @@ function render() {
         }
 
         /* Render the desired grid attribute values to the gridCellTex render target. */
+        var toRender = displayConfig.LAYER;
+        switch(toRender) {
+            case "Velocity":
+                gridCellRender.renderToTarget(renderer, velocityField.read_buf, gridCellTex);
+                break;
+            case "Pressure":
+                gridCellRender.renderToTarget(renderer, pressureField.read_buf, gridCellTex);
+                break;
+            case "Divergence":
+                gridCellRender.renderToTarget(renderer, divergenceField.read_buf, gridCellTex);
+                break;
+            default:
+                break;
+        }
         // gridCellRender.renderToTarget(renderer, velocityField.read_buf, gridCellTex);
         // gridCellRender.renderToTarget(renderer, pressureField.read_buf, gridCellTex);
-        gridCellRender.renderToTarget(renderer, divergenceField.read_buf, gridCellTex);
+        // gridCellRender.renderToTarget(renderer, divergenceField.read_buf, gridCellTex);
     }
 
     if (displayConfig.PARTICLES_ON) {

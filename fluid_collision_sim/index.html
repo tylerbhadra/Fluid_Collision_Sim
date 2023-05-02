@@ -243,7 +243,7 @@
         float bC = texture2D(b, uv).x;
 
         // evaluate Jacobi iteration
-        float jac = xL + xR + xB + xT + alpha * bC * rBeta;
+        float jac = (xL + xR + xB + xT + (alpha * bC)) * rBeta;
         gl_FragColor = vec4(jac, 0.0, 0.0, 1.0);
       }
     </script>
