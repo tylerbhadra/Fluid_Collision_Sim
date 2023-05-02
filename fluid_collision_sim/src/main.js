@@ -39,6 +39,12 @@ var particleRender;
 var gridCellRender;
 var particleTex;
 var gridCellTex;
+var velocityCellScale;
+var velocityCellBias;
+var pressureCellScale;
+var pressureCellBias;
+var divergenceCellScale;
+var divergenceCellBias;
 
 /* Variables for canvas/screen render */
 var canvasMaterial;
@@ -102,6 +108,12 @@ function init_attrib_fields() {
     divergenceField = new AttributeField(grid_resolution);
     pressureField = new AttributeField(grid_resolution);
     boundaryField = new AttributeField(grid_resolution);
+    velocityCellScale = new THREE.Vector3(2.0, 2.0, 2.0);
+    velocityCellBias = new THREE.Vector3(0.6, 0.6, 0.6);
+    pressureCellScale = new THREE.Vector3(4.0, 4.0, 4.0);
+    pressureCellBias = new THREE.Vector3(0.6, 0.6, 0.6);
+    divergenceCellScale = new THREE.Vector3(4.0, 4.0, 4.0);
+    divergenceCellBias = new THREE.Vector3(0.6, 0.6, 0.6);
 
     /* This just initializes the velocityField with v = < 1,0,0,1 > (i.e fluid initially flows to the right) */
     v_conf_inator = new ConfigInator(grid_resolution);
@@ -114,6 +126,7 @@ function init_attrib_fields() {
     divergence2D = new Divergence(grid_resolution);
     jacobi = new Jacobi(grid_resolution);
     projector = new Gradient(grid_resolution);
+    
 
     /* Initialize particle simulation shader loader, particle positions buffer and particle age buffer */
     var particleSpan = Math.sqrt(displayConfig.NUM_PARTICLES);
@@ -177,7 +190,7 @@ function render() {
     if (!displayConfig.PAUSED) {
 
         /* Advect velocity through the fluid */
-        advector.advect_texture(renderer, velocityField.read_buf, velocityField.read_buf, 1.0, 1.0, velocityField.write_buf);
+        advector.advect_texture(renderer, velocityField.read_buf, velocityField.read_buf, 0.998, 1.0, velocityField.write_buf);
         velocityField.update_read_buf();
 
         /* Diffusion Step? */
@@ -233,15 +246,15 @@ function render() {
                 break;
             case "Velocity":
                 displayConfig.PARTICLES_ON = false;
-                gridCellRender.renderToTarget(renderer, velocityField.read_buf, gridCellTex);
+                gridCellRender.renderToTarget(renderer, velocityField.read_buf, velocityCellScale, velocityCellBias, gridCellTex);
                 break;
             case "Pressure":
                 displayConfig.PARTICLES_ON = false;
-                gridCellRender.renderToTarget(renderer, pressureField.read_buf, gridCellTex);
+                gridCellRender.renderToTarget(renderer, pressureField.read_buf, pressureCellScale, pressureCellBias, gridCellTex);
                 break;
             case "Divergence":
                 displayConfig.PARTICLES_ON = false;
-                gridCellRender.renderToTarget(renderer, divergenceField.read_buf, gridCellTex);
+                gridCellRender.renderToTarget(renderer, divergenceField.read_buf, divergenceCellScale, divergenceCellBias, gridCellTex);
                 break;
             default:
                 break;
