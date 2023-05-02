@@ -10,8 +10,8 @@ export default class Jacobi {
         this.gridRes = res;
 
         this.uniforms = {
-            alpha: {type: 'f', value: null},   // alpha
-            rbeta: {type: 'f', value: null},  // reciprocal beta
+            alpha: {type: 'f', value: null},  // alpha
+            rBeta: {type: 'f', value: null},  // reciprocal beta
             x: {type: 't', value: null},      // x vector (Ax = b)
             b: {type: 't', value: null},      // b vector (Ax = b)
 
@@ -32,9 +32,9 @@ export default class Jacobi {
         this.scene.add(this.plane);
     }
 
-    compute_pressure(renderer, alpha, rbeta, x, b, output) {
+    compute(renderer, alpha, rBeta, x, b, output) {
         this.uniforms.alpha.value = alpha;
-        this.uniforms.rbeta.value = rbeta;
+        this.uniforms.rBeta.value = rBeta;
         this.uniforms.x.value = x.texture;
         this.uniforms.b.value = b.texture;
   

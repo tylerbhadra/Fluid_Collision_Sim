@@ -33,14 +33,15 @@
         float vx = pixel.x;
         float vy = pixel.y;
 
-        //if (vx > 0.5) {
-        //  gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0);
-        //} else {
-        //  gl_FragColor = vec4(0.5, 1.0, 0.0, 1.0);
+        if (vx < 0.5) {
+          gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        } 
+        //else {
+        //  gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
         //}
         //gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 
-        gl_FragColor = vec4(vx, vy, 0.0, 1.0);
+        //gl_FragColor = vec4(vx, vy, 0.0, 1.0);
       }
     </script>
     <script id="advectFrag" type="shader-code">
@@ -229,22 +230,22 @@
 
       void main() {
         // normalizing vectors
-        vec2 ustep = vec2(1.0, 0.0) / gridSize.x;
-        vec2 vstep = vec2(0.0, 1.0) / gridSize.y;
+        vec2 ustep = vec2(1.0 / gridSize.x, 0.0);
+        vec2 vstep = vec2(0.0, 1.0 / gridSize.y);
         vec2 uv = gl_FragCoord.xy / gridSize.xy;
 
         // left, right, bottom, and top x samples    
-        float xL = texture2D(x, uv - ustep).x;
-        float xR = texture2D(x, uv + ustep).x;
-        float xB = texture2D(x, uv - vstep).x;
-        float xT = texture2D(x, uv + vstep).x;
+        vec2 xL = texture2D(x, uv - ustep).xy;
+        vec2 xR = texture2D(x, uv + ustep).xy;
+        vec2 xB = texture2D(x, uv - vstep).xy;
+        vec2 xT = texture2D(x, uv + vstep).xy;
 
         // b sample, from center     
-        float bC = texture2D(b, uv).x;
+        vec2 bC = texture2D(b, uv).xy;
 
         // evaluate Jacobi iteration
-        float jac = (xL + xR + xB + xT + (alpha * bC)) * rBeta;
-        gl_FragColor = vec4(jac, 0.0, 0.0, 1.0);
+        vec2 jac = (xL + xR + xB + xT + (alpha * bC)) * rBeta;
+        gl_FragColor = vec4(jac, 0.0, 1.0);
       }
     </script>
 

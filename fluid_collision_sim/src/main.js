@@ -47,7 +47,7 @@ var canvas;
 
 var displayConfig = {
     // BASIC DISPLAY OPTIONS WITH PLACEHOLDER VALUES -> ADD MORE + DECIDE ON DEFAULT VALUES LATER
-    JACOBI_ITERATIONS: 40,
+    JACOBI_ITERATIONS: 30,
     PAUSED: false,
     NUM_PARTICLES: 64000,
     NUM_RENDER_STEPS: 10,
@@ -180,7 +180,7 @@ function render() {
 
         /* Diffusion Step? */
         for (let i = 0; i < displayConfig.JACOBI_ITERATIONS; i++) {
-            jacobi.compute_pressure(renderer, 1.0, 0.25, velocityField.read_buf, velocityField.read_buf, velocityField.write_buf);
+            jacobi.compute(renderer, 1.0, 0.20, velocityField.read_buf, velocityField.read_buf, velocityField.write_buf);
             velocityField.update_read_buf();
         }
         
@@ -198,9 +198,9 @@ function render() {
         renderer.setRenderTarget(null);
         // v_conf_inator.configure_field(renderer, pressureField.read_buf);
         for (let i = 0; i < displayConfig.JACOBI_ITERATIONS; i++) {
-            // jacobi.compute_pressure(renderer, -1.0, 4, divergenceField.read_buf, pressureField.read_buf, pressureField.write_buf);
-            jacobi.compute_pressure(renderer, -1.0, 0.25, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
-            // jacobi.compute_pressure(renderer, -1.0, 4, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
+            // jacobi.compute(renderer, -1.0, 4, divergenceField.read_buf, pressureField.read_buf, pressureField.write_buf);
+            jacobi.compute(renderer, -1.0, 0.25, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
+            // jacobi.compute(renderer, -1.0, 4, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
             pressureField.update_read_buf();
         }
 
