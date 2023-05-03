@@ -56,26 +56,26 @@ var boundaryGeometry;
 var boundaries
 
 var displayConfig = {
-    // BASIC DISPLAY OPTIONS WITH PLACEHOLDER VALUES -> ADD MORE + DECIDE ON DEFAULT VALUES LATER
+    /* Initial display values and configuration terms */
     JACOBI_ITERATIONS: 30,
     PAUSED: false,
     NUM_PARTICLES: 25000,
     NUM_RENDER_STEPS: 5,
     MAX_PARTICLE_AGE: 100,
-    V_SCALE: 40,
+    V_SCALE: 30,
     DELTA_TIME: 1.0,
     PARTICLES_ON: true,
     VISCOUS_DIFFUSION_ON: false,
     INPUT_MODE: "Drag Fluid",
     LAYER: "Fluid",
-    RADIUS: 5,
+    RADIUS: 3,
     CLEAR_SIM: false
 };
 
 function initGUI() {
     var gui = new dat.GUI( { width: 450 } );
 
-    // Add display options and toggleables here
+    /* Display options */
     gui.add(displayConfig, 'INPUT_MODE', [
         "Drag Fluid",
         "Draw Boundaries",
@@ -89,7 +89,7 @@ function initGUI() {
     ]).name("Layer");
     gui.add(displayConfig, 'V_SCALE', 20, 100).name("Particle Velocity Scaling Term");
     gui.add(displayConfig, 'JACOBI_ITERATIONS', 20, 60).name("Jacobi Iterations");
-    gui.add(displayConfig, 'RADIUS', 2, 10).name("Radius Size");
+    gui.add(displayConfig, 'RADIUS', 2, 10).name("Radius/Brush Size");
     gui.add(displayConfig, 'VISCOUS_DIFFUSION_ON').name("Enable Viscous Diffusion?");
     gui.add(displayConfig, 'PAUSED').name("Pause?");
     gui.add(displayConfig, 'CLEAR_SIM').name("Clear?");
