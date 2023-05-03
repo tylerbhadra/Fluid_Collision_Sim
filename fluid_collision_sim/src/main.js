@@ -67,17 +67,14 @@ var displayConfig = {
     PARTICLES_ON: true,
     INPUT_MODE: "Drag Fluid",
     LAYER: "Fluid",
-    RADIUS: 5
-    // Cont.
-    // TODO
+    RADIUS: 5,
+    CLEAR_SIM: false
 };
 
 function initGUI() {
     var gui = new dat.GUI( { width: 450 } );
 
     // Add display options and toggleables here
-    // gui.add(displayConfig, 'PARTICLES_ON').name("Toggle Particles?");
-    gui.add(displayConfig, 'PAUSED').name("Pause?");
     gui.add(displayConfig, 'INPUT_MODE', [
         "Drag Fluid",
         "Draw Boundaries",
@@ -91,10 +88,9 @@ function initGUI() {
     ]).name("Layer");
     gui.add(displayConfig, 'V_SCALE', 20, 100).name("Particle Velocity Scaling Term");
     gui.add(displayConfig, 'JACOBI_ITERATIONS', 20, 60).name("Jacobi Iterations");
-    gui.add(displayConfig, 'RADIUS', 5, 10).name("Radius Size");
-
-    // Cont.
-    // TODO
+    gui.add(displayConfig, 'RADIUS', 2, 10).name("Radius Size");
+    gui.add(displayConfig, 'PAUSED').name("Pause?");
+    gui.add(displayConfig, 'CLEAR_SIM').name("Clear?");
 }
 
 function initScene() {
@@ -204,6 +200,18 @@ document.onmousedown = function(event) {
 document.onmouseup = function(event) {
     externalVelocity.source.z = 0;
     arbitraryBoundary.source.z = 0;
+}
+
+function clear_sim() {
+    renderer.setRenderTarget(velocityField.read_buf);
+    renderer.clear();
+    renderer.setRenderTarget(pressureField.read_buf);
+    renderer.clear();
+    renderer.setRenderTarget(divergenceField.read_buf);
+    renderer.clear();
+    renderer.setRenderTarget(boundaryField.read_buf);
+    renderer.clear();
+    renderer.setRenderTarget(null);
 }
 
 function render() {
@@ -316,6 +324,10 @@ function render() {
         canvasMaterial.map = particleTex.texture;
     } else {
         canvasMaterial.map = gridCellTex.texture;
+    }
+
+    if (displayConfig.CLEAR_SIM) {
+        clear_sim();
     }
 
     renderer.render(fluidScene, camera);
