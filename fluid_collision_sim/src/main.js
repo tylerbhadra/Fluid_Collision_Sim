@@ -167,7 +167,7 @@ function initShaderLoaders() {
     canvas = new THREE.Mesh( canvasGeometry, canvasMaterial );
     fluidScene.add(canvas);
 
-    /* For an additional render to a boundary layer sitting on topo of the fluidScene */
+    /* For an additional render to a boundary layer sitting on top of the fluidScene */
     boundaryGeometry = new THREE.PlaneGeometry( 2, 2 );
     boundaryMaterial =  new THREE.MeshBasicMaterial({map: boundaryTex.texture});
     boundaries = new THREE.Mesh( boundaryGeometry, boundaryMaterial );
