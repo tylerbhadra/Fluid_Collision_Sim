@@ -20,13 +20,13 @@
     </style>
   </head>
   <body>
-    <script id="particleVert" type="shader-code">
+    <script id="configVelocityFrag" type="shader-code">
       precision mediump float;
-      uniform float time;
-      uniform float velocity;
 
-      varying float vAlpha;
+      uniform vec2 gridRes;
+      // uniform sampler2D dataTex;
 
+<<<<<<< HEAD
       attribute float lifespan;
       attribute float offset;
       attribute float grid_velocity;
@@ -69,9 +69,459 @@
           float d = length(gl_PointCoord - vec2(0.5));
           float a = 1.0 - custom_smoothstep(0.0, 0.5, d);
           gl_FragColor = vec4(0.65, 0.80, 0.89, a * vAlpha);
+=======
+      // uniform float initialVal;
+
+      void main() {
+        vec2 pixel  = gl_FragCoord.xy / gridRes.xy;
+        float px = pixel.x;
+        float py = pixel.y;
+
+        //if (px > 0.49 && px < 0.51 && py > 0.35 && py < 0.65) {
+        //  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        //}  else {
+        //  gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        //}
+        //else {
+        //  gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+        //}
+        if (px < 0.01) {
+          gl_FragColor = vec4(0.4, 0.0, 0.0, 1.0);
+        }
+
+        //gl_FragColor = vec4(vx, vy, 0.0, 1.0);
+>>>>>>> internal_boundaries
       }
     </script>
 
+    <script id="advectFrag" type="shader-code">
+      precision mediump float;
+
+      uniform sampler2D velocity;
+      uniform sampler2D advected;
+
+      uniform vec2 gridSize;
+      uniform float gridScale;
+      uniform float dissipation;
+      uniform float timestep;
+
+      vec2 bilerp(sampler2D d, vec2 p)
+      {
+          vec4 ij; // i0, j0, i1, j1
+          ij.xy = floor(p - 0.5) + 0.5;
+          ij.zw = ij.xy + 1.0;
+
+          vec4 uv = ij / gridSize.xyxy;
+          vec2 d11 = texture2D(d, uv.xy).xy;
+          vec2 d21 = texture2D(d, uv.zy).xy;
+          vec2 d12 = texture2D(d, uv.xw).xy;
+          vec2 d22 = texture2D(d, uv.zw).xy;
+
+          vec2 a = p - ij.xy;
+
+          return mix(mix(d11, d21, a.x), mix(d12, d22, a.x), a.y);
+      }
+
+      void main()
+      {
+          vec2 uv = gl_FragCoord.xy / gridSize.xy;
+          float scale = 1.0 / gridScale;
+
+          // trace point back in time
+          vec2 p = gl_FragCoord.xy - timestep * scale * 10.0 * texture2D(velocity, uv).xy;
+
+          gl_FragColor = vec4(dissipation * bilerp(advected, p), 0.0, 1.0);
+      }
+      
+    </script>
+
+    <script id="externalForceFrag" type="shader-code">
+      precision mediump float;
+
+      uniform vec2 gridSize;
+      uniform sampler2D inputTexture;
+      uniform vec3 source;
+      uniform vec2 sourceDirection;
+      uniform float radius;
+
+      void main() {
+        float timestep = 1.0;
+        vec2 pixel = gl_FragCoord.xy / gridSize.xy;
+        float dist = distance(gl_FragCoord.xy, source.xy);
+        vec2 external_force = source.z * timestep * max(radius - dist, 0.0) * sourceDirection / gridSize.xy;
+        gl_FragColor = vec4(texture2D(inputTexture, pixel).xy + 4.0 * external_force.xy, 0.0, 1.0);
+      }
+    </script>
+
+    <script id="arbitraryBoundaryFrag" type="shader-code">
+      precision mediump float;
+
+      uniform vec2 gridSize;
+      uniform sampler2D inputTexture;
+      uniform sampler2D boundaryField;
+      uniform vec3 source;
+      uniform float radius;
+      uniform float scale;
+
+      void main() {
+        vec2 pixel = gl_FragCoord.xy / gridSize.xy;
+        float dist = distance(gl_FragCoord.xy, source.xy);
+        vec4 outcolor = texture2D(inputTexture, pixel);
+        if (dist <= radius && source.z == 1.0) {
+          outcolor = vec4(scale * 1.0, 0.0, 0.0, 1.0);
+        } 
+        gl_FragColor = outcolor;
+      }
+    </script>
+
+    <script id="gridCellRenderFrag" type="shader-code">
+      precision mediump float;
+
+      uniform vec2 gridRes;
+      uniform sampler2D inputTexture;
+
+      void main() {
+        vec2 pixel = gl_FragCoord.xy / gridRes;
+        vec3 bias = vec3(0.5, 0.5, 0.5);
+        vec3 scale = vec3(0.9, 0.1, 0.9);
+        gl_FragColor = vec4(bias + scale * texture2D(inputTexture, pixel).xyz, 1.0);
+      }
+    </script>
+
+    <script id="particleAgeFrag" type="shader-code">
+      precision mediump float;
+
+      uniform vec2 gridRes;
+      uniform float dt;
+      uniform sampler2D particleAgeState;
+
+      varying vec2 vUv;
+
+      void main() {
+        vec2 age = texture2D(particleAgeState, vUv).xy;
+        age.x = age.x + dt;
+        gl_FragColor = vec4(age.xy, 0.0, 1.0);
+      }
+    </script>
+
+    <script id="particleSimVert" type="shader-code">
+      precision mediump float;
+
+      varying vec2 vUv;
+
+      void main() {
+        vUv = vec2(uv.x, uv.y);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+      }
+    </script>
+
+    <script id="particleSimFrag" type="shader-code">
+      precision mediump float;
+
+      uniform vec2 gridRes;
+      uniform float dt;
+      uniform float renderSteps;
+      uniform float v_scale;
+      uniform sampler2D initialPositions;
+      uniform sampler2D particlePositions;
+      uniform sampler2D particleAgeState;
+      uniform sampler2D velocityField;
+
+      varying vec2 vUv;
+
+      void main() {
+        vec2 pos = texture2D(particlePositions, vUv).xy;
+        vec2 age = texture2D(particleAgeState, vUv).xy;
+
+        // Use pos to index into velocity texture. Positions are randomly generated between -1 and 1. Need to
+        // manipulate pos so its x and y values are between 0 and 1.
+        vec2 velocity = texture2D(velocityField, (pos + 1.0)/ 2.0 ).xy;
+
+        pos.x += (v_scale * velocity.x/gridRes.x * dt)/renderSteps;
+        pos.y += (v_scale * velocity.y/gridRes.y * dt)/renderSteps;
+
+        float maxAge = age.y;
+        float shouldReset = mod(age.x, maxAge);
+
+        if (shouldReset == 0.0) {
+          pos = texture2D(initialPositions, vUv).xy;
+        } 
+
+        gl_FragColor = vec4(pos, 0.0, 1.0);
+      }
+    </script>
+
+    <script id="particleRenderVert" type="shader-code">
+      precision mediump float;
+
+      uniform vec2 gridRes;
+      uniform sampler2D particlePositions;
+      uniform sampler2D velocityField;
+
+      varying float v_magnitude;
+
+      void main() {
+        vec2 pos = texture2D(particlePositions, position.xy).xy;
+        vec2 velocity = texture2D(velocityField, (pos + 1.0)/2.0 ).xy;
+        v_magnitude = clamp(dot(velocity, velocity) + 0.7, 0.0, 1.0);
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4( pos, 0.0, 1.0 );
+
+        gl_PointSize = 1.0;
+      }
+    </script>
+
+    <script id="particleRenderFrag" type="shader-code">
+      precision mediump float;
+
+      varying float v_magnitude;
+
+      void main() {
+        gl_FragColor = vec4(0.65, 0.65 + v_magnitude/5.0, 1.0, 1.0);
+      }
+    </script>
+
+    <script id="boundaryVelocityFrag" type="shader-code">
+      precision mediump float;
+
+      uniform vec2 gridRes;
+      uniform sampler2D inputTexture;   // The velocity vector field we are appyling no-slip boundary conditions to
+      uniform sampler2D boundaryField;  // The texture storing information on which cells are fluid cells and which cells are boundary cells
+
+      void main() {
+        // normalizing vectors
+        vec2 ustep = vec2(1.0 / gridRes.x, 0.0);
+        vec2 vstep = vec2(0.0, 1.0 / gridRes.y);
+        vec2 uv = gl_FragCoord.xy / gridRes.xy;
+        float isBoundary = texture2D(boundaryField, uv).x;
+
+        vec4 outcolor = vec4(texture2D(inputTexture, uv).xy, 0.0, 0.0);
+        if (isBoundary == 1.0) {
+          float num_adjacent_fluid_cells = 0.0;
+          vec2 combined_neighbor_velocity = vec2(0.0, 0.0);
+
+          if (texture2D(boundaryField, uv - ustep).x == 0.0) {
+            vec2 vL = texture2D(inputTexture, uv - ustep).xy;
+            combined_neighbor_velocity = combined_neighbor_velocity + vL;
+            num_adjacent_fluid_cells += 1.0;
+          }
+
+          if (texture2D(boundaryField, uv + ustep).x == 0.0) {
+            vec2 vR = texture2D(inputTexture, uv + ustep).xy;
+            combined_neighbor_velocity = combined_neighbor_velocity + vR;
+            num_adjacent_fluid_cells += 1.0;
+          }
+
+          if (texture2D(boundaryField, uv - vstep).x == 0.0) {
+            vec2 vB = texture2D(inputTexture, uv - vstep).xy;
+            combined_neighbor_velocity = combined_neighbor_velocity + vB;
+            num_adjacent_fluid_cells += 1.0;
+          }
+
+          if (texture2D(boundaryField, uv + vstep).x == 0.0) {
+            vec2 vT = texture2D(inputTexture, uv + vstep).xy;
+            combined_neighbor_velocity = combined_neighbor_velocity + vT;
+            num_adjacent_fluid_cells += 1.0;
+          }
+
+          if (num_adjacent_fluid_cells == 0.0) {
+            outcolor = vec4(0.0, 0.0, 0.0, 1.0);
+          } else {
+            vec2 velocity_avg = combined_neighbor_velocity/num_adjacent_fluid_cells;
+            outcolor = vec4(-velocity_avg, 0.0, 1.0);
+          }
+        }
+
+        gl_FragColor = outcolor;
+      }
+    </script>
+
+    <script id="boundaryPressureFrag" type="shader-code">
+      precision mediump float;
+
+      uniform vec2 gridRes;
+      uniform sampler2D inputTexture;   // The pressure field we are appyling pure Neumann pressure boundary conditions to
+      uniform sampler2D boundaryField;  // The texture storing information on which cells are fluid cells and which cells are boundary cells
+
+      void main() {
+        // normalizing vectors
+        vec2 ustep = vec2(1.0 / gridRes.x, 0.0);
+        vec2 vstep = vec2(0.0, 1.0 / gridRes.y);
+        vec2 uv = gl_FragCoord.xy / gridRes.xy;
+        float isBoundary = texture2D(boundaryField, uv).x;
+
+        // pressure value at current cell
+        float p = texture2D(inputTexture, uv).x;
+        vec4 outcolor = vec4(p.x, 0.0, 0.0, 1.0);
+
+        if (isBoundary == 1.0) {
+          float num_adjacent_fluid_cells = 0.0;
+          float total_surrounding_pressure = 0.0;
+
+          if (texture2D(boundaryField, uv - ustep).x == 0.0) {
+            float pL = texture2D(inputTexture, uv - ustep).x;
+            total_surrounding_pressure += pL;
+            num_adjacent_fluid_cells += 1.0;
+          }
+
+          if (texture2D(boundaryField, uv + ustep).x == 0.0) {
+            float pR = texture2D(inputTexture, uv + ustep).x;
+            total_surrounding_pressure += pR;
+            num_adjacent_fluid_cells += 1.0;
+          }
+
+          if (texture2D(boundaryField, uv - vstep).x == 0.0) {
+            float pB = texture2D(inputTexture, uv - vstep).x;
+            total_surrounding_pressure += pB;
+            num_adjacent_fluid_cells += 1.0;
+          }
+
+          if (texture2D(boundaryField, uv + vstep).x == 0.0) {
+            float pT = texture2D(inputTexture, uv + vstep).x;
+            total_surrounding_pressure += pT;
+            num_adjacent_fluid_cells += 1.0;
+          }
+
+          if (num_adjacent_fluid_cells == 0.0) {
+            outcolor = vec4(0.0, 0.0, 0.0, 1.0);
+          } else {
+            float pressure_avg = total_surrounding_pressure/num_adjacent_fluid_cells;
+            outcolor = vec4(pressure_avg, 0.0, 0.0, 1.0);
+          }
+        } 
+
+        gl_FragColor = outcolor;
+      }
+    </script>
+
+    <script id="boundaryRenderFrag" type="shader-code">
+      precision mediump float;
+
+      uniform vec2 gridRes;
+      uniform sampler2D boundaryField;
+      uniform sampler2D inputTexture;
+
+      void main() {
+        vec2 pixel = gl_FragCoord.xy / gridRes;
+        float isBoundary = texture2D(boundaryField, pixel).x;
+
+        // Render boundaries as a black cell, otherwise keep cell transparent
+        vec4 outcolor = texture2D(inputTexture, pixel);
+        if (isBoundary == 1.0) {
+          outcolor = vec4(0.3, 0.3, 0.3, 1.0);
+        } 
+
+        gl_FragColor = outcolor;
+      }
+    </script>
+
+    <!-- Jacobi Iteration Fragment Program -->
+    <script id="jacobiFrag" type="shader-code">
+      precision mediump float;
+
+      uniform float alpha;  // alpha
+      uniform float rBeta;  // reciprocal beta
+      uniform sampler2D x;  // x vector (Ax = b)
+      uniform sampler2D b;  // b vector (Ax = b)
+
+      uniform vec2 gridSize;
+      uniform float gridScale;
+
+      void main() {
+        // normalizing vectors
+        vec2 ustep = vec2(1.0 / gridSize.x, 0.0);
+        vec2 vstep = vec2(0.0, 1.0 / gridSize.y);
+        vec2 uv = gl_FragCoord.xy / gridSize.xy;
+
+        // left, right, bottom, and top x samples    
+        vec2 xL = texture2D(x, uv - ustep).xy;
+        vec2 xR = texture2D(x, uv + ustep).xy;
+        vec2 xB = texture2D(x, uv - vstep).xy;
+        vec2 xT = texture2D(x, uv + vstep).xy;
+
+        // b sample, from center     
+        vec2 bC = texture2D(b, uv).xy;
+
+        // evaluate Jacobi iteration
+        vec2 jac = (xL + xR + xB + xT + (alpha * bC)) * rBeta;
+        gl_FragColor = vec4(jac, 0.0, 1.0);
+      }
+    </script>
+
+    <!-- Divergence Fragment Program -->
+    <script id="divergenceFrag" type="shader-code">
+      precision mediump float;
+
+      uniform sampler2D w;  // intermediate velocity field 
+
+      uniform vec2 gridSize;
+      uniform float gridScale;
+      
+      void main() {
+        // normalizing vectors
+        vec2 ustep = vec2(1.0 / gridSize.x, 0.0);
+        vec2 vstep = vec2(0.0, 1.0 / gridSize.y);
+        vec2 uv = gl_FragCoord.xy / gridSize.xy;
+
+        // halfrdx = one-half of the reciprocal of the grid scale
+        float halfrdx = 0.5 * 1.0/ gridScale; 
+
+        // left, right, bottom, and top w samples
+        // Not sure why wB and wT use .y here when everything else uses .x 
+        float wL = 10.0 * texture2D(w, uv - ustep).x;
+        float wR = 10.0 * texture2D(w, uv + ustep).x;
+        float wB = 10.0 * texture2D(w, uv - vstep).y;
+        float wT = 10.0 * texture2D(w, uv + vstep).y;
+        
+        // evaluate divergence
+        float div = halfrdx * ((wR - wL) + (wT - wB))/10.0;
+        gl_FragColor = vec4(div, 0.0, 0.0, 1.0);
+      }
+    </script>
+
+    <!-- Gradient Subtraction Fragment Program -->
+    <script id="gradientFrag" type="shader-code">
+      precision mediump float;
+
+      uniform sampler2D p;  // pressure
+      uniform sampler2D w;  // velocity
+
+      uniform vec2 gridSize;
+      uniform float gridScale;
+      
+      void main() {
+        // normalizing vectors
+        vec2 ustep = vec2(1.0, 0.0) / gridSize.x;
+        vec2 vstep = vec2(0.0, 1.0) / gridSize.y;
+        vec2 uv = gl_FragCoord.xy / gridSize.xy;
+
+        // halfrdx = one-half of the reciprocal of the grid scale
+        float halfrdx = 0.5 * 1.0/ gridScale; 
+
+        // left, right, bottom, and top p samples    
+        float pL = texture2D(p, uv - ustep).x;
+        float pR = texture2D(p, uv + ustep).x;
+        float pB = texture2D(p, uv - vstep).x;
+        float pT = texture2D(p, uv + vstep).x;
+        
+        // evaluate gradient
+        vec2 grad = halfrdx * vec2(pR - pL, pT - pB);
+        vec2 velo = texture2D(w, uv).xy;
+        gl_FragColor = vec4(velo - grad, 0.0, 1.0);
+      }
+    </script>
+
+    <script type="module" src="src/AttributeField.js"></script>
+    <script type="module" src="src/Config-inator.js"></script>
+    <script type="module" src="src/GridCellRender.js"></script>
+    <script type="module" src="src/ParticleAge.js"></script>
+    <script type="module" src="src/ParticleSim.js"></script>
+    <script type="module" src="src/ParticleRender.js"></script>
+    <script type="module" src="src/Jacobi.js"></script>
+    <script type="module" src="src/Gradient.js"></script>
+    <script type="module" src="src/Divergence.js"></script>
+    <script type="module" src="src/External-Forces.js"></script>
+    <script type="module" src="src/Boundary.js"></script>
     <script type="module" src="src/main.js"></script>
   </body>
 </html>
