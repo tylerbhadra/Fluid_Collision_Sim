@@ -194,19 +194,27 @@ function render() {
         /* Advect velocity through the fluid */
         advector.advect_texture(renderer, velocityField.read_buf, velocityField.read_buf, 0.998, 1.0, velocityField.write_buf);
         velocityField.update_read_buf();
+        
+        /* Boundary velocity step for advection*/
+        boundary.compute(renderer, -1.0, velocityField.read_buf, velocityField.write_buf);
+        velocityField.update_read_buf();
 
         /* Diffusion Step? */
         for (let i = 0; i < displayConfig.JACOBI_ITERATIONS; i++) {
             jacobi.compute(renderer, 1.0, 0.20, velocityField.read_buf, velocityField.read_buf, velocityField.write_buf);
             velocityField.update_read_buf();
-        }
 
-        /* Boundary velocity step */
-        boundary.compute(renderer, -1.0, velocityField.read_buf, velocityField.write_buf);
-        velocityField.update_read_buf();
+            /* Boundary velocity step for diffusion*/
+            boundary.compute(renderer, -1.0, velocityField.read_buf, velocityField.write_buf);
+            velocityField.update_read_buf();
+        }
         
         /* Apply external forces */
         externalVelocity.apply_force(renderer, velocityField.read_buf, 5.0, velocityField.write_buf);
+        velocityField.update_read_buf();
+
+        /* Boundary velocity step for external forces*/
+        boundary.compute(renderer, -1.0, velocityField.read_buf, velocityField.write_buf);
         velocityField.update_read_buf();
 
         /* Calculate the divergence of the intermediate velocity field. */
@@ -221,7 +229,7 @@ function render() {
             jacobi.compute(renderer, -1.0, 0.25, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
             pressureField.update_read_buf();
 
-            /* Boundary pressure step */
+            /* Boundary pressure step for divergence*/
             boundary.compute(renderer, 1.0, pressureField.read_buf, pressureField.write_buf);
             pressureField.update_read_buf();
         }
@@ -230,8 +238,7 @@ function render() {
         projector.subtract_gradient(renderer, pressureField.read_buf, velocityField.read_buf, velocityField.write_buf);
         velocityField.update_read_buf();
 
-
-        /* Boundary velocity step */
+        /* Boundary velocity step for projection*/
         boundary.compute(renderer, -1.0, velocityField.read_buf, velocityField.write_buf);
         velocityField.update_read_buf();
 
