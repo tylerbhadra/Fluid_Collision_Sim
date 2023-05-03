@@ -224,11 +224,12 @@ function render() {
             /* Boundary pressure step */
             boundary.compute(renderer, 1.0, pressureField.read_buf, pressureField.write_buf);
             pressureField.update_read_buf();
-
         }
 
-        /* Projection        float f_scale = 1.0;
-update_read_buf();
+        /* Projection step => Subract the pressure gradient from the intermediate velocity field to enforce incompressibility. */
+        projector.subtract_gradient(renderer, pressureField.read_buf, velocityField.read_buf, velocityField.write_buf);
+        velocityField.update_read_buf();
+
 
         /* Boundary velocity step */
         boundary.compute(renderer, -1.0, velocityField.read_buf, velocityField.write_buf);
