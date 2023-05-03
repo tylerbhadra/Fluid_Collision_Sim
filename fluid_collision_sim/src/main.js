@@ -59,7 +59,7 @@ var displayConfig = {
     /* Initial display values and configuration terms */
     JACOBI_ITERATIONS: 30,
     PAUSED: false,
-    NUM_PARTICLES: 25000,
+    NUM_PARTICLES: 49000,
     NUM_RENDER_STEPS: 5,
     MAX_PARTICLE_AGE: 100,
     V_SCALE: 30,
@@ -69,7 +69,8 @@ var displayConfig = {
     INPUT_MODE: "Drag Fluid",
     LAYER: "Fluid",
     RADIUS: 3,
-    CLEAR_SIM: false
+    RESET_FLUID: false,
+    CLEAR_BOUNDARIES: false
 };
 
 function initGUI() {
@@ -88,11 +89,14 @@ function initGUI() {
         "Divergence"
     ]).name("Layer");
     gui.add(displayConfig, 'V_SCALE', 20, 100).name("Particle Velocity Scaling Term");
+    gui.add(displayConfig, 'NUM_PARTICLES', 10000, 100000).name("Particle Count");
     gui.add(displayConfig, 'JACOBI_ITERATIONS', 20, 60).name("Jacobi Iterations");
     gui.add(displayConfig, 'RADIUS', 2, 10).name("Radius/Brush Size");
-    gui.add(displayConfig, 'VISCOUS_DIFFUSION_ON').name("Enable Viscous Diffusion?");
-    gui.add(displayConfig, 'PAUSED').name("Pause?");
-    gui.add(displayConfig, 'CLEAR_SIM').name("Clear?");
+    gui.add(displayConfig, 'VISCOUS_DIFFUSION_ON').name("Enable Viscous Diffusion");
+    gui.add(displayConfig, 'PAUSED').name("Pause");
+    gui.add(displayConfig, 'RESET_FLUID').name("Reset Fluid");
+    gui.add(displayConfig, 'CLEAR_BOUNDARIES').name("Clear Boundaries");
+
 }
 
 function initScene() {
@@ -127,6 +131,20 @@ function initAttributeFields() {
     // v_conf_inator.configure_field(renderer, boundaryField.read_buf);
 }
 
+function initParticles() {
+    /* Initialize particle simulation shader loader, particle positions buffer and particle age buffer */
+    var particleSpan = Math.sqrt(displayConfig.NUM_PARTICLES);
+    var particleSpanVec2 = new THREE.Vector2(particleSpan, particleSpan);
+    particleSim = new ParticleSim(grid_resolution, particleSpan, displayConfig.NUM_RENDER_STEPS, displayConfig.DELTA_TIME);
+    particleAge = new ParticleAge(grid_resolution, displayConfig.MAX_PARTICLE_AGE, particleSpan, displayConfig.DELTA_TIME);
+    particlePositions = new AttributeField(particleSpanVec2);
+    particleAgeState = new AttributeField(particleSpanVec2);
+
+    /* Initialize shader loader and texture for rendering particles */
+    particleRender = new ParticleRender(grid_resolution, displayConfig.NUM_PARTICLES);
+    particleTex = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
+}
+
 function initShaderLoaders() {
     /* Initialize fluid simulation shader loaders */
     advector = new Advector(grid_resolution);
@@ -137,19 +155,9 @@ function initShaderLoaders() {
     projector = new Gradient(grid_resolution);
     boundary = new Boundary(grid_resolution);
 
-    /* Initialize particle simulation shader loader, particle positions buffer and particle age buffer */
-    var particleSpan = Math.sqrt(displayConfig.NUM_PARTICLES);
-    var particleSpanVec2 = new THREE.Vector2(particleSpan, particleSpan);
-    particleSim = new ParticleSim(grid_resolution, particleSpan, displayConfig.NUM_RENDER_STEPS, displayConfig.DELTA_TIME);
-    particleAge = new ParticleAge(grid_resolution, displayConfig.MAX_PARTICLE_AGE, particleSpan, displayConfig.DELTA_TIME);
-    particlePositions = new AttributeField(particleSpanVec2);
-    particleAgeState = new AttributeField(particleSpanVec2);
-
     /* Initialize the shader loaders for the canvas/screen render */
     boundaryRender = new BoundaryRender(grid_resolution);
-    particleRender = new ParticleRender(grid_resolution, displayConfig.NUM_PARTICLES);
     gridCellRender = new GridCellRender(grid_resolution);
-    particleTex = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
     gridCellTex = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
     boundaryTex = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
 
@@ -207,13 +215,18 @@ document.onmouseup = function(event) {
     arbitraryBoundary.source.z = 0;
 }
 
-function clear_sim() {
+function resetFluid() {
+    initParticles();
     renderer.setRenderTarget(velocityField.read_buf);
     renderer.clear();
     renderer.setRenderTarget(pressureField.read_buf);
     renderer.clear();
     renderer.setRenderTarget(divergenceField.read_buf);
     renderer.clear();
+    renderer.setRenderTarget(null);
+}
+
+function clearBoundaries() {
     renderer.setRenderTarget(boundaryField.read_buf);
     renderer.clear();
     renderer.setRenderTarget(null);
@@ -334,18 +347,25 @@ function runSimulation() {
         canvasMaterial.map = gridCellTex.texture;
     }
 
-    if (displayConfig.CLEAR_SIM) {
-        clear_sim();
+    if (displayConfig.RESET_FLUID) {
+        resetFluid();
     }
 
-    renderer.render(fluidScene, camera);
-    renderer.render(boundaryScene, camera);
+    if (displayConfig.CLEAR_BOUNDARIES) {
+        clearBoundaries();
+    }
+
+    if (!displayConfig.RESET_FLUID && !displayConfig.CLEAR_BOUNDARIES) {
+        renderer.render(fluidScene, camera);
+        renderer.render(boundaryScene, camera);
+    }
 
     requestAnimationFrame(runSimulation);
 }
 
 initGUI();
 initScene();
+initParticles(displayConfig.NUM_PARTICLES);
 initAttributeFields();
 initShaderLoaders();
 runSimulation()
