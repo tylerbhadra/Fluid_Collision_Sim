@@ -24,73 +24,13 @@
       precision mediump float;
 
       uniform vec2 gridRes;
-      // uniform sampler2D dataTex;
-
-<<<<<<< HEAD
-      attribute float lifespan;
-      attribute float offset;
-      attribute float grid_velocity;
-
-      float custom_smoothstep(float a, float b, float x) {
-        float t = clamp((x - a) / (b - a), 0.0, 1.0);
-     
-        return t * t * (3.0 - (2.0 * t));
-      }
-
-      void main() {
-          vec3 newPos = position;
-          float current = mod(offset + time, lifespan);
-          float percent = current/lifespan;
-          
-          //newPos.x += velocity * current;
-          newPos.x += grid_velocity * current;
-          newPos.y += position.y;
-
-          vAlpha = custom_smoothstep(0.0, 0.05, percent);
-          vAlpha -= custom_smoothstep(0.85, 1.0, percent);
-
-          vec4 mvPos = modelViewMatrix * vec4(newPos, 1.0);
-          gl_PointSize = 10.0;
-          gl_Position = projectionMatrix * mvPos;
-          
-      }
-    </script>
-    <script id="particleFrag" type="shader-code">
-      precision mediump float;
-      varying float vAlpha;
-
-      float custom_smoothstep(float a, float b, float x) {
-        float t = clamp((x - a) / (b - a), 0.0, 1.0);
-     
-        return t * t * (3.0 - (2.0 * t));
-      }
-
-      void main() {
-          float d = length(gl_PointCoord - vec2(0.5));
-          float a = 1.0 - custom_smoothstep(0.0, 0.5, d);
-          gl_FragColor = vec4(0.65, 0.80, 0.89, a * vAlpha);
-=======
-      // uniform float initialVal;
 
       void main() {
         vec2 pixel  = gl_FragCoord.xy / gridRes.xy;
-        float px = pixel.x;
-        float py = pixel.y;
 
-        //if (px > 0.49 && px < 0.51 && py > 0.35 && py < 0.65) {
-        //  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-        //}  else {
-        //  gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-        //}
-        //else {
-        //  gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
-        //}
         if (px < 0.01) {
           gl_FragColor = vec4(0.4, 0.0, 0.0, 1.0);
         }
-
-        //gl_FragColor = vec4(vx, vy, 0.0, 1.0);
->>>>>>> internal_boundaries
       }
     </script>
 
