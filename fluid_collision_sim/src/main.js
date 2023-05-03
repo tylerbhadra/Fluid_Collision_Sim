@@ -77,6 +77,14 @@ function initGUI() {
     var gui = new dat.GUI( { width: 450 } );
 
     /* Display options */
+    gui.add(displayConfig, 'V_SCALE', 20, 100).name("Particle Velocity Scaling Term");
+    gui.add(displayConfig, 'NUM_PARTICLES', 10000, 100000).name("Particle Count");
+    gui.add(displayConfig, 'JACOBI_ITERATIONS', 20, 60).name("Jacobi Iterations");
+    gui.add(displayConfig, 'RADIUS', 2, 10).name("Radius/Brush Size");
+    gui.add(displayConfig, 'VISCOUS_DIFFUSION_ON').name("Enable Viscous Diffusion");
+    gui.add(displayConfig, 'PAUSED').name("Pause");
+    gui.add(displayConfig, 'RESET_FLUID').name("Reset Fluid");
+    gui.add(displayConfig, 'CLEAR_BOUNDARIES').name("Clear Boundaries");
     gui.add(displayConfig, 'INPUT_MODE', [
         "Drag Fluid",
         "Draw Boundaries",
@@ -88,14 +96,6 @@ function initGUI() {
         "Pressure",
         "Divergence"
     ]).name("Layer");
-    gui.add(displayConfig, 'V_SCALE', 20, 100).name("Particle Velocity Scaling Term");
-    gui.add(displayConfig, 'NUM_PARTICLES', 10000, 100000).name("Particle Count");
-    gui.add(displayConfig, 'JACOBI_ITERATIONS', 20, 60).name("Jacobi Iterations");
-    gui.add(displayConfig, 'RADIUS', 2, 10).name("Radius/Brush Size");
-    gui.add(displayConfig, 'VISCOUS_DIFFUSION_ON').name("Enable Viscous Diffusion");
-    gui.add(displayConfig, 'PAUSED').name("Pause");
-    gui.add(displayConfig, 'RESET_FLUID').name("Reset Fluid");
-    gui.add(displayConfig, 'CLEAR_BOUNDARIES').name("Clear Boundaries");
 }
 
 function initScene() {
