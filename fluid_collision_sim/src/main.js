@@ -240,7 +240,7 @@ function runSimulation() {
     if (!displayConfig.PAUSED) {
 
         /* Advect velocity through the fluid */
-        advector.advect_texture(renderer, velocityField.read_buf, velocityField.read_buf, 1.0, 1.0, velocityField.write_buf);
+        advector.advect_texture(renderer, velocityField.read_buf, velocityField.read_buf, 0.999, 1.0, velocityField.write_buf);
         velocityField.update_read_buf();
 
         /* Diffusion Step */
@@ -281,10 +281,6 @@ function runSimulation() {
         renderer.setRenderTarget(null);
         for (let i = 0; i < displayConfig.JACOBI_ITERATIONS; i++) {
             jacobi.compute(renderer, -1.0, 0.25, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
-            pressureField.update_read_buf();
-
-            /* Boundary pressure step for divergence*/
-            boundary.compute(renderer, 1.0, pressureField.read_buf, pressureField.write_buf);
             pressureField.update_read_buf();
         }
 
@@ -329,17 +325,17 @@ function runSimulation() {
                 break;
             case "Velocity":
                 displayConfig.PARTICLES_ON = false;
-                gridCellRender.renderToTarget(renderer, velocityField.read_buf, gridCellTex);
+                gridCellRender.renderToTarget(renderer, velocityField.read_buf, velocityCellScale, velocityCellBias, gridCellTex);
                 boundaryRender.renderToTarget(renderer, gridCellTex, boundaryField.read_buf, canvasTex);
                 break;
             case "Pressure":
                 displayConfig.PARTICLES_ON = false;
-                gridCellRender.renderToTarget(renderer, pressureField.read_buf, gridCellTex);
+                gridCellRender.renderToTarget(renderer, pressureField.read_buf, pressureCellScale, pressureCellBias, gridCellTex);
                 boundaryRender.renderToTarget(renderer, gridCellTex, boundaryField.read_buf, canvasTex);
                 break;
             case "Divergence":
                 displayConfig.PARTICLES_ON = false;
-                gridCellRender.renderToTarget(renderer, divergenceField.read_buf, gridCellTex);
+                gridCellRender.renderToTarget(renderer, divergenceField.read_buf, divergenceCellScale, divergenceCellBias, gridCellTex);
                 boundaryRender.renderToTarget(renderer, gridCellTex, boundaryField.read_buf, canvasTex);
                 break;
             default:
