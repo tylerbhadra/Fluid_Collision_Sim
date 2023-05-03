@@ -45,15 +45,12 @@ var gridCellRender;
 var boundaryRender;
 var particleTex;
 var gridCellTex;
-var boundaryTex;
 
 /* Variables for canvas/screen render */
 var canvasMaterial;
 var canvasGeometry;
 var canvas;
-var boundaryMaterial;
-var boundaryGeometry;
-var boundaries
+var canvasTex;
 
 var displayConfig = {
     /* Initial display values and configuration terms */
@@ -157,21 +154,17 @@ function initShaderLoaders() {
     boundaryRender = new BoundaryRender(grid_resolution);
     gridCellRender = new GridCellRender(grid_resolution);
     gridCellTex = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
-    boundaryTex = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
 
-    /* This is for the actual render to the canvas. The canvasTex will be written to by the gridCellRender (which runs the
-       shader that visualizes one of the grid attributes as colored cells in the grid) or particleRender (which loads the shader
-       that visualizes the movement of the fluid using particles) */
+    /* This is for the actual render to the canvas. The canvasTex will be written to by boundaryRender, which takes in
+       a texture created by gridCellRender (which runs the shader that visualizes one of the grid attributes as
+       colored cells in the grid) or particleRender (which loads the shader that visualizes the movement of the fluid 
+       using particles) and overlays gray boundary cells onto that texture, storing the new consolidated texture in
+       canvasTex. */
+    canvasTex = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
     canvasGeometry = new THREE.PlaneGeometry( 2, 2 );
-    canvasMaterial =  new THREE.MeshBasicMaterial({map: particleTex.texture});
+    canvasMaterial =  new THREE.MeshBasicMaterial({map: canvasTex.texture});
     canvas = new THREE.Mesh( canvasGeometry, canvasMaterial );
     fluidScene.add(canvas);
-
-    /* For an additional render to a boundary layer sitting on top of the fluidScene */
-    boundaryGeometry = new THREE.PlaneGeometry( 2, 2 );
-    boundaryMaterial =  new THREE.MeshBasicMaterial({map: boundaryTex.texture});
-    boundaries = new THREE.Mesh( boundaryGeometry, boundaryMaterial );
-    boundaryScene.add(boundaries);
 }
 
 /* INTERACTABLITY */
@@ -312,37 +305,31 @@ function runSimulation() {
             particleRender.renderToTarget(renderer, particlePositions.read_buf, velocityField.read_buf, particleTex);
         }
 
-        /* Render the desired grid attribute values to the gridCellTex render target. */
+        /* Render boundaries on top of the desired fluid texture (i.e. particles, velocity, etc). Store in finalTex. */
         var toRender = displayConfig.LAYER;
         switch(toRender) {
             case "Fluid":
                 displayConfig.PARTICLES_ON = true;
-                boundaryRender.renderToTarget(renderer, particleTex, boundaryField.read_buf, boundaryTex);
+                boundaryRender.renderToTarget(renderer, particleTex, boundaryField.read_buf, canvasTex);
                 break;
             case "Velocity":
                 displayConfig.PARTICLES_ON = false;
                 gridCellRender.renderToTarget(renderer, velocityField.read_buf, gridCellTex);
-                boundaryRender.renderToTarget(renderer, gridCellTex, boundaryField.read_buf, boundaryTex);
+                boundaryRender.renderToTarget(renderer, gridCellTex, boundaryField.read_buf, canvasTex);
                 break;
             case "Pressure":
                 displayConfig.PARTICLES_ON = false;
                 gridCellRender.renderToTarget(renderer, pressureField.read_buf, gridCellTex);
-                boundaryRender.renderToTarget(renderer, gridCellTex, boundaryField.read_buf, boundaryTex);
+                boundaryRender.renderToTarget(renderer, gridCellTex, boundaryField.read_buf, canvasTex);
                 break;
             case "Divergence":
                 displayConfig.PARTICLES_ON = false;
                 gridCellRender.renderToTarget(renderer, divergenceField.read_buf, gridCellTex);
-                boundaryRender.renderToTarget(renderer, gridCellTex, boundaryField.read_buf, boundaryTex);
+                boundaryRender.renderToTarget(renderer, gridCellTex, boundaryField.read_buf, canvasTex);
                 break;
             default:
                 break;
         }
-    }
-
-    if (displayConfig.PARTICLES_ON) {
-        canvasMaterial.map = particleTex.texture;
-    } else {
-        canvasMaterial.map = gridCellTex.texture;
     }
 
     if (displayConfig.RESET_FLUID) {
@@ -355,7 +342,6 @@ function runSimulation() {
 
     if (!displayConfig.RESET_FLUID && !displayConfig.CLEAR_BOUNDARIES) {
         renderer.render(fluidScene, camera);
-        renderer.render(boundaryScene, camera);
     }
 
     requestAnimationFrame(runSimulation);
