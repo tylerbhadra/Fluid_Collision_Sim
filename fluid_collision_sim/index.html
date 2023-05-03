@@ -30,12 +30,14 @@
 
       void main() {
         vec2 pixel  = gl_FragCoord.xy / gridRes.xy;
-        float vx = pixel.x;
-        float vy = pixel.y;
+        float px = pixel.x;
+        float py = pixel.y;
 
-        if (vx < 0.05) {
+        if (px > 0.47 && px < 0.53 && py > 0.45 && py < 0.55) {
           gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-        } 
+        }  else {
+          gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        }
         //else {
         //  gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
         //}
@@ -44,6 +46,7 @@
         //gl_FragColor = vec4(vx, vy, 0.0, 1.0);
       }
     </script>
+
     <script id="advectFrag" type="shader-code">
       precision mediump float;
 
@@ -84,6 +87,7 @@
       }
       
     </script>
+
     <script id="externalForceFrag" type="shader-code">
       precision mediump float;
 
@@ -99,9 +103,10 @@
         float dist = distance(gl_FragCoord.xy, source.xy);
         //vec2 direction = (pixel.xy - source.xy);
         vec2 external_force = source.z * timestep * max(radius - dist, 0.0) * sourceDirection / gridSize.xy;
-        gl_FragColor = vec4(texture2D(inputTexture, pixel).xy  + external_force.xy, 0.0, 1.0);
+        gl_FragColor = vec4(texture2D(inputTexture, pixel).xy + 4.0 * external_force.xy, 0.0, 1.0);
       }
     </script>
+
     <script id="gridCellRenderFrag" type="shader-code">
       precision mediump float;
 
@@ -116,6 +121,7 @@
         //gl_FragColor = mix(vec4(1.0, 0.0, 0.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), vec4(texture2D(inputTexture, pixel).xyz, 1.0));
       }
     </script>
+
     <script id="particleAgeFrag" type="shader-code">
       precision mediump float;
 
@@ -131,6 +137,7 @@
         gl_FragColor = vec4(age.xy, 0.0, 1.0);
       }
     </script>
+
     <script id="particleSimVert" type="shader-code">
       precision mediump float;
 
@@ -141,6 +148,7 @@
         gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
       }
     </script>
+
     <script id="particleSimFrag" type="shader-code">
       precision mediump float;
 
@@ -176,6 +184,7 @@
         gl_FragColor = vec4(pos, 0.0, 1.0);
       }
     </script>
+
     <script id="particleRenderVert" type="shader-code">
       precision mediump float;
 
@@ -195,6 +204,7 @@
         gl_PointSize = 1.0;
       }
     </script>
+
     <script id="particleRenderFrag" type="shader-code">
       precision mediump float;
 
@@ -207,49 +217,129 @@
         //gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
       }
     </script>
-    <script id="boundaryFrag" type="shader-code">
+
+    <script id="boundaryVelocityFrag" type="shader-code">
       precision mediump float;
 
       uniform vec2 gridRes;
-      uniform sampler2D inputTexture    // The texture we are appyling boundary conditions to (i.e pressure or velocity)
+      uniform sampler2D inputTexture;   // The velocity vector field we are appyling no-slip boundary conditions to
       uniform sampler2D boundaryField;  // The texture storing information on which cells are fluid cells and which cells are boundary cells
-      uniform float boundaryValue;      // The value we store in boundary cells. 0 when input field is velocity, 1 when its pressure
+      uniform float boundaryValue;      // The value we store in boundary cells. Should be 0, since there velocity is 0.0 inside a boundary cell
 
       void main() {
         // normalizing vectors
-        vec2 ustep = vec2(1.0 / gridSize.x, 0.0);
-        vec2 vstep = vec2(0.0, 1.0 / gridSize.y);
-        vec2 uv = gl_FragCoord.xy / gridSize.xy;
-        float isBoundary = texture2D(boundaryField, uv);
+        vec2 ustep = vec2(1.0 / gridRes.x, 0.0);
+        vec2 vstep = vec2(0.0, 1.0 / gridRes.y);
+        vec2 uv = gl_FragCoord.xy / gridRes.xy;
+        float isBoundary = texture2D(boundaryField, uv).x;
 
-        vec4 output = vec4(texture2d(inputField, uv).xy, 0.0, 1.0);
-        if (isBoundary) {
-          output.x = boundaryValue;
+        vec4 outcolor = vec4(0.0, 0.0, 0.0, 0.0);
+        if (isBoundary == 1.0) {
+          outcolor = vec4(boundaryValue, boundaryValue, 0.0, 1.0);
         } else {
-          // left, right, bottom, and top inputTexture samples    
-          vec2 texL = texture2D(x, uv - ustep).xy;
-          vec2 texR = texture2D(x, uv + ustep).xy;
-          vec2 texB = texture2D(x, uv - vstep).xy;
-          vec2 texT = texture2D(x, uv + vstep).xy;
+          // velocity at current cell
+          vec2 v = texture2D(inputTexture, uv).xy;
+          outcolor = vec4(v, 0.0, 1.0);
 
-          if (texture2D(boundaryField, texL).x == 1.0) {
-            output = vec4(clamp(output.xy + vec2(boundaryValue, 0.0), vec2(1.0, 1.0))
+          // Negate horizontal and vertical velocity components if they are directed into a boundary
+          if (texture2D(boundaryField, uv - ustep).x == 1.0  && v.x < 0.0) {
+            outcolor = vec4(0.0, v.y, 0.0, 1.0);
           }
 
-          if (texture2D(boundaryField, texR).x == 1.0) {
-            
+          if (texture2D(boundaryField, uv + ustep).x == 1.0 && v.x > 0.0) {
+            outcolor = vec4(0.0, v.y, 0.0, 1.0);
           }
 
-          if (texture2D(boundaryField, texT).x == 1.0) {
-            
+          if (texture2D(boundaryField, uv - vstep).x == 1.0 && v.y < 0.0) {
+            outcolor = vec4(v.x, 0.0, 0.0, 1.0);
           }
 
-          if (texture2D(boundaryField, texB).x == 1.0) {
-            
+          if (texture2D(boundaryField, uv + vstep).x == 1.0 && v.y > 0.0) {
+            outcolor = vec4(v.x, 0.0, 0.0, 1.0);
           }
         }
 
-        gl_FragColor = output;
+        gl_FragColor = outcolor;
+      }
+    </script>
+
+    <script id="boundaryPressureFrag" type="shader-code">
+      precision mediump float;
+
+      uniform vec2 gridRes;
+      uniform sampler2D inputTexture;   // The pressure field we are appyling pure Neumann pressure boundary conditions to
+      uniform sampler2D boundaryField;  // The texture storing information on which cells are fluid cells and which cells are boundary cells
+      uniform float boundaryValue;      // The value we store in boundary cells. Pressure should be 1.0 inside of boundary cells
+
+      void main() {
+        // normalizing vectors
+        vec2 ustep = vec2(1.0 / gridRes.x, 0.0);
+        vec2 vstep = vec2(0.0, 1.0 / gridRes.y);
+        vec2 uv = gl_FragCoord.xy / gridRes.xy;
+        float isBoundary = texture2D(boundaryField, uv).x;
+
+        // pressure value at current cell
+        float p = texture2D(inputTexture, uv).x;
+        vec4 outcolor = vec4(p.x, 0.0, 0.0, 1.0);
+
+        if (isBoundary == 1.0) {
+          float num_adjacent_fluid_cells = 0.0;
+          float total_surrounding_pressure = 0.0;
+
+          if (texture2D(boundaryField, uv - ustep).x == 0.0) {
+            float pL = texture2D(inputTexture, uv - ustep).x;
+            total_surrounding_pressure += pL;
+            num_adjacent_fluid_cells += 1.0;
+          }
+
+          if (texture2D(boundaryField, uv + ustep).x == 0.0) {
+            float pR = texture2D(inputTexture, uv + ustep).x;
+            total_surrounding_pressure += pR;
+            num_adjacent_fluid_cells += 1.0;
+          }
+
+          if (texture2D(boundaryField, uv - vstep).x == 0.0) {
+            float pB = texture2D(inputTexture, uv - vstep).x;
+            total_surrounding_pressure += pB;
+            num_adjacent_fluid_cells += 1.0;
+          }
+
+          if (texture2D(boundaryField, uv + vstep).x == 0.0) {
+            float pT = texture2D(inputTexture, uv + vstep).x;
+            total_surrounding_pressure += pT;
+            num_adjacent_fluid_cells += 1.0;
+          }
+
+          float pressure_avg = total_surrounding_pressure/num_adjacent_fluid_cells
+          if (pressure_avg == 0.0) {
+            outcolor = vec4(1.0, 0.0, 0.0, 1.0);
+          } else {
+            outcolor = vec4(pressure_avg, 0.0, 0.0, 1.0);
+          }
+        } 
+
+        gl_FragColor = outcolor;
+      }
+    </script>
+
+    <script id="boundaryRenderFrag" type="shader-code">
+      precision mediump float;
+
+      uniform vec2 gridRes;
+      uniform sampler2D boundaryField;
+      uniform sampler2D inputTexture;
+
+      void main() {
+        vec2 pixel = gl_FragCoord.xy / gridRes;
+        float isBoundary = texture2D(boundaryField, pixel).x;
+
+        // Render boundaries as a black cell, otherwise keep cell transparent
+        vec4 outcolor = texture2D(inputTexture, pixel);
+        if (isBoundary == 1.0) {
+          outcolor = vec4(0.0, 0.0, 0.0, 1.0);
+        } 
+
+        gl_FragColor = outcolor;
       }
     </script>
 
@@ -362,6 +452,7 @@
     <script type="module" src="src/Gradient.js"></script>
     <script type="module" src="src/Divergence.js"></script>
     <script type="module" src="src/External-Forces.js"></script>
+    <script type="module" src="src/Boundary.js"></script>
     <script type="module" src="src/main.js"></script>
   </body>
 </html>

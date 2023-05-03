@@ -10,8 +10,10 @@ import ExternalForce from './External-Forces.js';
 import Divergence from './Divergence.js';
 import Jacobi from './Jacobi.js';
 import Gradient from './Gradient.js';
+import Boundary from './Boundary.js';
+import BoundaryRender from './BoundaryRender.js';
 
-var scene, camera, renderer;
+var fluidScene, boundaryScene, camera, renderer;
 var grid_resolution = new THREE.Vector2(512, 256);
 
 /* Attribute Fields */
@@ -27,6 +29,7 @@ var externalVelocity;
 var divergence2D;
 var jacobi;
 var projector;
+var boundary;
 
 /* Particle simulation shader & particle position buffer */
 var particleAge;
@@ -37,13 +40,18 @@ var particleAgeState;
 /* Shader loaders for final render + texture variables */
 var particleRender;
 var gridCellRender;
+var boundaryRender;
 var particleTex;
 var gridCellTex;
+var boundaryTex;
 
 /* Variables for canvas/screen render */
 var canvasMaterial;
 var canvasGeometry;
 var canvas;
+var boundaryMaterial;
+var boundaryGeometry;
+var boundaries
 
 var displayConfig = {
     // BASIC DISPLAY OPTIONS WITH PLACEHOLDER VALUES -> ADD MORE + DECIDE ON DEFAULT VALUES LATER
@@ -61,7 +69,7 @@ var displayConfig = {
 };
 
 function initGUI() {
-    var gui = new dat.GUI( { width: 400 } );
+    var gui = new dat.GUI( { width: 450 } );
 
     // Add display options and toggleables here
     // gui.add(displayConfig, 'PARTICLES_ON').name("Toggle Particles?");
@@ -72,7 +80,7 @@ function initGUI() {
         "Pressure",
         "Divergence"
     ]).name("Layer");
-    gui.add(displayConfig, 'V_SCALE', 20, 100).name("Velocity Scaling Term");
+    gui.add(displayConfig, 'V_SCALE', 20, 100).name("Particle Velocity Scaling Term");
     gui.add(displayConfig, 'JACOBI_ITERATIONS', 20, 60).name("Jacobi Iterations");
 
     // Cont.
@@ -80,7 +88,8 @@ function initGUI() {
 }
 
 function initScene() {
-    scene = new THREE.Scene();
+    fluidScene = new THREE.Scene();
+    boundaryScene = new THREE.Scene();
 
     renderer = new THREE.WebGLRenderer({ 
         antialias: true,
@@ -107,6 +116,7 @@ function init_attrib_fields() {
     v_conf_inator = new ConfigInator(grid_resolution);
     // v_conf_inator.configure_field(renderer, velocityField.read_buf);
     // v_conf_inator.configure_field(renderer, velocityField.write_buf);
+    v_conf_inator.configure_field(renderer, boundaryField.read_buf);
 
     /* Initialize fluid simulation shader loaders */
     advector = new Advector(grid_resolution);
@@ -114,6 +124,7 @@ function init_attrib_fields() {
     divergence2D = new Divergence(grid_resolution);
     jacobi = new Jacobi(grid_resolution);
     projector = new Gradient(grid_resolution);
+    boundary = new Boundary(grid_resolution);
 
     /* Initialize particle simulation shader loader, particle positions buffer and particle age buffer */
     var particleSpan = Math.sqrt(displayConfig.NUM_PARTICLES);
@@ -124,10 +135,12 @@ function init_attrib_fields() {
     particleAgeState = new AttributeField(particleSpanVec2);
 
     /* Initialize the shader loaders for the canvas/screen render */
+    boundaryRender = new BoundaryRender(grid_resolution);
     particleRender = new ParticleRender(grid_resolution, displayConfig.NUM_PARTICLES);
     gridCellRender = new GridCellRender(grid_resolution);
     particleTex = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
     gridCellTex = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
+    boundaryTex = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
 
 
     /* This is for the actual render to the canvas. The canvasTex will be written to by the gridCellRender (which runs the
@@ -136,7 +149,12 @@ function init_attrib_fields() {
     canvasGeometry = new THREE.PlaneGeometry( 2, 2 );
     canvasMaterial =  new THREE.MeshBasicMaterial({map: particleTex.texture});
     canvas = new THREE.Mesh( canvasGeometry, canvasMaterial );
-    scene.add(canvas);
+    fluidScene.add(canvas);
+
+    boundaryGeometry = new THREE.PlaneGeometry( 2, 2 );
+    boundaryMaterial =  new THREE.MeshBasicMaterial({map: boundaryTex.texture});
+    boundaries = new THREE.Mesh( boundaryGeometry, boundaryMaterial );
+    boundaryScene.add(boundaries);
 }
 
 var prevTime = null;
@@ -180,14 +198,24 @@ function render() {
         advector.advect_texture(renderer, velocityField.read_buf, velocityField.read_buf, 1.0, 1.0, velocityField.write_buf);
         velocityField.update_read_buf();
 
+        boundary.setModeVelocity();
+        boundary.apply_boundary_conditions(renderer, velocityField.read_buf, boundaryField.read_buf, velocityField.write_buf);
+        velocityField.update_read_buf();
+
         /* Diffusion Step */
         for (let i = 0; i < displayConfig.JACOBI_ITERATIONS; i++) {
             jacobi.compute(renderer, 1.0, 0.20, velocityField.read_buf, velocityField.read_buf, velocityField.write_buf);
+            velocityField.update_read_buf();
+
+            boundary.apply_boundary_conditions(renderer, velocityField.read_buf, boundaryField.read_buf, velocityField.write_buf);
             velocityField.update_read_buf();
         }
         
         /* Apply external forces */
         externalVelocity.apply_force(renderer, velocityField.read_buf, 5.0, velocityField.write_buf);
+        velocityField.update_read_buf();
+
+        boundary.apply_boundary_conditions(renderer, velocityField.read_buf, boundaryField.read_buf, velocityField.write_buf);
         velocityField.update_read_buf();
 
         /* Calculate the divergence of the intermediate velocity field. */
@@ -198,13 +226,21 @@ function render() {
         renderer.setRenderTarget(pressureField.read_buf);
         renderer.clear();
         renderer.setRenderTarget(null);
+        boundary.setModePressure();
         for (let i = 0; i < displayConfig.JACOBI_ITERATIONS; i++) {
             jacobi.compute(renderer, -1.0, 0.25, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
             pressureField.update_read_buf();
+
+            // boundary.apply_boundary_conditions(renderer, pressureField.read_buf, boundaryField.read_buf, pressureField.write_buf);
+            // pressureField.update_read_buf();
         }
 
         /* Projection step => Subract the pressure gradient from the intermediate velocity field to enforce incompressibility. */
         projector.subtract_gradient(renderer, pressureField.read_buf, velocityField.read_buf, velocityField.write_buf);
+        velocityField.update_read_buf();
+
+        boundary.setModeVelocity();
+        boundary.apply_boundary_conditions(renderer, velocityField.read_buf, boundaryField.read_buf, velocityField.write_buf);
         velocityField.update_read_buf();
 
         /* Age particles */
@@ -230,18 +266,22 @@ function render() {
         switch(toRender) {
             case "Fluid":
                 displayConfig.PARTICLES_ON = true;
+                boundaryRender.renderToTarget(renderer, particleTex, boundaryField.read_buf, boundaryTex);
                 break;
             case "Velocity":
                 displayConfig.PARTICLES_ON = false;
                 gridCellRender.renderToTarget(renderer, velocityField.read_buf, gridCellTex);
+                boundaryRender.renderToTarget(renderer, gridCellTex, boundaryField.read_buf, boundaryTex);
                 break;
             case "Pressure":
                 displayConfig.PARTICLES_ON = false;
                 gridCellRender.renderToTarget(renderer, pressureField.read_buf, gridCellTex);
+                boundaryRender.renderToTarget(renderer, gridCellTex, boundaryField.read_buf, boundaryTex);
                 break;
             case "Divergence":
                 displayConfig.PARTICLES_ON = false;
                 gridCellRender.renderToTarget(renderer, divergenceField.read_buf, gridCellTex);
+                boundaryRender.renderToTarget(renderer, gridCellTex, boundaryField.read_buf, boundaryTex);
                 break;
             default:
                 break;
@@ -254,7 +294,8 @@ function render() {
         canvasMaterial.map = gridCellTex.texture;
     }
 
-    renderer.render(scene, camera);
+    renderer.render(fluidScene, camera);
+    renderer.render(boundaryScene, camera);
 
     requestAnimationFrame(render);
 }

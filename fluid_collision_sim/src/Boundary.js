@@ -14,14 +14,14 @@ export default class Boundary {
 
         this.uniforms = {
             gridRes: {type: 'v2', value: res},
-            inputField:  {type: 't', value: null},
+            inputTexture:  {type: 't', value: null},
             boundaryField: {type: 't', value: null},
-            boundaryValue: {type: 'f', value: null}
+            boundaryValue: {type: 'f', value: null},
           }
 
         this.material = new THREE.ShaderMaterial({
             uniforms: this.uniforms,
-            fragmentShader: document.getElementById( 'boundaryFrag' ).innerHTML,
+            fragmentShader: document.getElementById( 'boundaryVelocityFrag' ).innerHTML,
             depthWrite: false,
             depthTest: false,
             blending: THREE.NoBlending
@@ -32,10 +32,19 @@ export default class Boundary {
         this.scene.add(this.plane);
     }
 
-    apply_boundary_conditions(renderer, input, boundaryField, boundaryVal, output) {
-        this.uniforms.inputField.value = input.texture;
+    setModeVelocity() {
+        this.material.fragmentShader = document.getElementById( 'boundaryVelocityFrag' ).innerHTML;
+        this.uniforms.boundaryValue.value = 0.0;
+    }
+
+    setModePressure() {
+        this.material.fragmentShader = document.getElementById( 'boundaryPressureFrag' ).innerHTML;
+        this.uniforms.boundaryValue.value = 1.0;
+    }
+
+    apply_boundary_conditions(renderer, input, boundaryField, output) {
+        this.uniforms.inputTexture.value = input.texture;
         this.uniforms.boundaryField.value = boundaryField.texture;
-        this.uniforms.boundaryValue.value = boundaryVal;
 
         renderer.setRenderTarget(output);
         renderer.render(this.scene, this.camera);
