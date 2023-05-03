@@ -36,6 +36,7 @@ export default class ExternalForce {
     apply_force(renderer, input, radius, output) {
         this.uniforms.inputTexture.value = input.texture;
         this.uniforms.radius.value = radius;
+        
         renderer.setRenderTarget(output);
         renderer.render(this.scene, this.camera);
         renderer.setRenderTarget(null);

@@ -14,8 +14,6 @@ export default class ConfigInator {
 
         this.uniforms = {
             gridRes: {type: "v2", value: this.gridRes},
-            // dataTex: {type: "t", value: null},
-            initialVal: {type: "f", value: null}
         }
 
         this.material = new THREE.ShaderMaterial({
@@ -26,30 +24,10 @@ export default class ConfigInator {
             blending: THREE.NoBlending
         })
 
-        // this.geometry = new THREE.PlaneGeometry( 2 * (res.x - 2) / res.x, 2 * (res.y - 2) / res.y );
         this.geometry = new THREE.PlaneGeometry( 2, 2);
         this.plane = new THREE.Mesh(this.geometry, this.material);
         this.scene.add(this.plane);
     }
-
-    // /**
-    //  *  Initializes data array for the DataTexture with value.
-    //  */
-    // initialize_values(v) {
-    //     const length = this.gridRes.x * this.gridRes.y * 4;
-    //     const data = new Float32Array(length);
-
-    //     for (let i = 0; i < length; i++) {
-    //         const stride = i * 4;
-
-    //         data[ stride ] = i/this.gridRes.x;
-    //         data[ stride + 1 ] = 0.0;
-    //         data[ stride + 2 ] = 0.0;
-    //         data[ stride + 3 ] = 1.0;
-    //     }
-
-    //     return data;
-    // }
 
     configure_field(renderer, output) {
         renderer.setRenderTarget(output);

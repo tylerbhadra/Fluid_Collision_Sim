@@ -12,8 +12,7 @@ export default class Divergence {
         this.gridRes = res;
 
         this.uniforms = {
-            w: {type: 't', value: null},      // vector field
-
+            w: {type: 't', value: null},                    // velocity vector field
             gridSize: {type: 'v2', value: this.gridRes},
             gridScale: {type: 'f', value: 1.0},
           }

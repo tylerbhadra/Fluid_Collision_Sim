@@ -33,15 +33,17 @@
         float px = pixel.x;
         float py = pixel.y;
 
-        if (px > 0.49 && px < 0.51 && py > 0.35 && py < 0.65) {
-          gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-        }  else {
-          gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-        }
+        //if (px > 0.49 && px < 0.51 && py > 0.35 && py < 0.65) {
+        //  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        //}  else {
+        //  gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        //}
         //else {
         //  gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
         //}
-        //gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        if (px < 0.01) {
+          gl_FragColor = vec4(0.4, 0.0, 0.0, 1.0);
+        }
 
         //gl_FragColor = vec4(vx, vy, 0.0, 1.0);
       }
@@ -101,7 +103,6 @@
         float timestep = 1.0;
         vec2 pixel = gl_FragCoord.xy / gridSize.xy;
         float dist = distance(gl_FragCoord.xy, source.xy);
-        //vec2 direction = (pixel.xy - source.xy);
         vec2 external_force = source.z * timestep * max(radius - dist, 0.0) * sourceDirection / gridSize.xy;
         gl_FragColor = vec4(texture2D(inputTexture, pixel).xy + 4.0 * external_force.xy, 0.0, 1.0);
       }
@@ -139,7 +140,6 @@
         vec3 bias = vec3(0.5, 0.5, 0.5);
         vec3 scale = vec3(0.9, 0.1, 0.9);
         gl_FragColor = vec4(bias + scale * texture2D(inputTexture, pixel).xyz, 1.0);
-        //gl_FragColor = mix(vec4(1.0, 0.0, 0.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), vec4(texture2D(inputTexture, pixel).xyz, 1.0));
       }
     </script>
 
@@ -233,9 +233,6 @@
 
       void main() {
         gl_FragColor = vec4(0.65, 0.65 + v_magnitude/5.0, 1.0, 1.0);
-        //gl_FragColor = vec4(0.0, 0.0, 0.6, 1.0);
-        //gl_FragColor = vec4(0.0, 0.0, 0.4, 1.0);
-        //gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
       }
     </script>
 
@@ -245,7 +242,6 @@
       uniform vec2 gridRes;
       uniform sampler2D inputTexture;   // The velocity vector field we are appyling no-slip boundary conditions to
       uniform sampler2D boundaryField;  // The texture storing information on which cells are fluid cells and which cells are boundary cells
-      uniform float boundaryValue;      // The value we store in boundary cells. Should be 0, since there velocity is 0.0 inside a boundary cell
 
       void main() {
         // normalizing vectors
@@ -301,7 +297,6 @@
       uniform vec2 gridRes;
       uniform sampler2D inputTexture;   // The pressure field we are appyling pure Neumann pressure boundary conditions to
       uniform sampler2D boundaryField;  // The texture storing information on which cells are fluid cells and which cells are boundary cells
-      uniform float boundaryValue;      // The value we store in boundary cells. Pressure should be 1.0 inside of boundary cells
 
       void main() {
         // normalizing vectors
@@ -469,9 +464,6 @@
         vec2 velo = texture2D(w, uv).xy;
         gl_FragColor = vec4(velo - grad, 0.0, 1.0);
       }
-    </script>
-
-
     </script>
 
     <script type="module" src="src/AttributeField.js"></script>

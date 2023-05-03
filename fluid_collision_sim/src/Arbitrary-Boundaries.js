@@ -33,14 +33,6 @@ export default class ArbitraryBoundary {
         this.scene.add(this.plane);
     }
 
-    // setModeErase() {
-    //     this.uniforms.scale.value = 0.0;
-    // }
-
-    // setModeDraw() {
-    //     this.uniforms.scale.value = 1.0;
-    // }
-
     draw_boundary(renderer, input, radius, mode, output) {
         this.uniforms.inputTexture.value = input.texture;
         this.uniforms.radius.value = radius;

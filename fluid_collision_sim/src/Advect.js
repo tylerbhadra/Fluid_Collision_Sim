@@ -26,20 +26,18 @@ export default class Advector {
             blending: THREE.NoBlending
         })
 
-        // this.geometry = new THREE.PlaneGeometry( 2 * (res.x - 2) / res.x, 2 * (res.y - 2) / res.y );
         this.geometry = new THREE.PlaneGeometry( 2, 2 );
         this.plane = new THREE.Mesh(this.geometry, this.material);
         this.scene.add(this.plane);
     }
 
     advect_texture(renderer, input_velocity, input_advected, dissipation, delta_t, output) {
-        this.renderer = renderer;
         this.uniforms.velocity.value = input_velocity.texture;
         this.uniforms.advected.value = input_advected.texture;
         this.uniforms.dissipation.value = dissipation;
         this.uniforms.timestep.value = delta_t;
-        this.renderer.setRenderTarget(output);
-        this.renderer.render(this.scene, this.camera);
-        this.renderer.setRenderTarget(null);
+        renderer.setRenderTarget(output);
+        renderer.render(this.scene, this.camera);
+        renderer.setRenderTarget(null);
     }
 }

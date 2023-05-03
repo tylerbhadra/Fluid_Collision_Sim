@@ -96,7 +96,6 @@ function initGUI() {
     gui.add(displayConfig, 'PAUSED').name("Pause");
     gui.add(displayConfig, 'RESET_FLUID').name("Reset Fluid");
     gui.add(displayConfig, 'CLEAR_BOUNDARIES').name("Clear Boundaries");
-
 }
 
 function initScene() {
@@ -124,11 +123,10 @@ function initAttributeFields() {
     pressureField = new AttributeField(grid_resolution);
     boundaryField = new AttributeField(grid_resolution);
 
-    /* This just initializes the velocityField with v = < 1,0,0,1 > (i.e fluid initially flows to the right) */
-    v_conf_inator = new ConfigInator(grid_resolution);
+    // /* This just initializes the velocityField so that the fluid initially flows to the right */
+    // v_conf_inator = new ConfigInator(grid_resolution);
     // v_conf_inator.configure_field(renderer, velocityField.read_buf);
     // v_conf_inator.configure_field(renderer, velocityField.write_buf);
-    // v_conf_inator.configure_field(renderer, boundaryField.read_buf);
 }
 
 function initParticles() {
@@ -365,7 +363,7 @@ function runSimulation() {
 
 initGUI();
 initScene();
-initParticles(displayConfig.NUM_PARTICLES);
+initParticles();
 initAttributeFields();
 initShaderLoaders();
 runSimulation()

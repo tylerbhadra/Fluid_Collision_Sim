@@ -23,7 +23,6 @@ export default class GridCellRender {
             blending: THREE.NoBlending
         })
 
-        // this.geometry = new THREE.PlaneGeometry( 2 * (res.x - 2) / res.x, 2 * (res.y - 2) / res.y );
         this.geometry = new THREE.PlaneGeometry( 2, 2 );
         this.plane = new THREE.Mesh(this.geometry, this.material);
         this.scene.add(this.plane);
