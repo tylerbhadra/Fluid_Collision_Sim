@@ -107,6 +107,27 @@
       }
     </script>
 
+    <script id="arbitraryBoundaryFrag" type="shader-code">
+      precision mediump float;
+
+      uniform vec2 gridSize;
+      uniform sampler2D inputTexture;
+      uniform sampler2D boundaryField;
+      uniform vec3 source;
+      uniform float radius;
+      uniform float scale;
+
+      void main() {
+        vec2 pixel = gl_FragCoord.xy / gridSize.xy;
+        float dist = distance(gl_FragCoord.xy, source.xy);
+        vec4 outcolor = texture2D(inputTexture, pixel);
+        if (dist <= radius && source.z == 1.0) {
+          outcolor = vec4(scale * 1.0, 0.0, 0.0, 1.0);
+        } 
+        gl_FragColor = outcolor;
+      }
+    </script>
+
     <script id="gridCellRenderFrag" type="shader-code">
       precision mediump float;
 

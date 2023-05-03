@@ -12,6 +12,7 @@ import Jacobi from './Jacobi.js';
 import Gradient from './Gradient.js';
 import Boundary from './Boundary.js';
 import BoundaryRender from './BoundaryRender.js';
+import ArbitraryBoundary from './Arbitrary-Boundaries.js';
 
 var fluidScene, boundaryScene, camera, renderer;
 var grid_resolution = new THREE.Vector2(512, 256);
@@ -26,6 +27,7 @@ var pressureField;
 var v_conf_inator;
 var advector;
 var externalVelocity;
+var arbitraryBoundary;
 var divergence2D;
 var jacobi;
 var projector;
@@ -58,12 +60,14 @@ var displayConfig = {
     JACOBI_ITERATIONS: 30,
     PAUSED: false,
     NUM_PARTICLES: 25000,
-    NUM_RENDER_STEPS: 10,
+    NUM_RENDER_STEPS: 5,
     MAX_PARTICLE_AGE: 100,
-    V_SCALE: 30,
+    V_SCALE: 40,
     DELTA_TIME: 1.0,
     PARTICLES_ON: true,
-    LAYER: "Fluid"
+    INPUT_MODE: "Drag Fluid",
+    LAYER: "Fluid",
+    RADIUS: 5
     // Cont.
     // TODO
 };
@@ -74,6 +78,11 @@ function initGUI() {
     // Add display options and toggleables here
     // gui.add(displayConfig, 'PARTICLES_ON').name("Toggle Particles?");
     gui.add(displayConfig, 'PAUSED').name("Pause?");
+    gui.add(displayConfig, 'INPUT_MODE', [
+        "Drag Fluid",
+        "Draw Boundaries",
+        "Erase Boundaries"
+    ]).name("Input Mode");
     gui.add(displayConfig, "LAYER", [
         "Fluid",
         "Velocity",
@@ -82,6 +91,7 @@ function initGUI() {
     ]).name("Layer");
     gui.add(displayConfig, 'V_SCALE', 20, 100).name("Particle Velocity Scaling Term");
     gui.add(displayConfig, 'JACOBI_ITERATIONS', 20, 60).name("Jacobi Iterations");
+    gui.add(displayConfig, 'RADIUS', 5, 10).name("Radius Size");
 
     // Cont.
     // TODO
@@ -116,11 +126,12 @@ function init_attrib_fields() {
     v_conf_inator = new ConfigInator(grid_resolution);
     // v_conf_inator.configure_field(renderer, velocityField.read_buf);
     // v_conf_inator.configure_field(renderer, velocityField.write_buf);
-    v_conf_inator.configure_field(renderer, boundaryField.read_buf);
+    // v_conf_inator.configure_field(renderer, boundaryField.read_buf);
 
     /* Initialize fluid simulation shader loaders */
     advector = new Advector(grid_resolution);
     externalVelocity = new ExternalForce(grid_resolution);
+    arbitraryBoundary = new ArbitraryBoundary(grid_resolution);
     divergence2D = new Divergence(grid_resolution);
     jacobi = new Jacobi(grid_resolution);
     projector = new Gradient(grid_resolution);
@@ -170,6 +181,9 @@ function UpdateMousePosition(X,Y){
     externalVelocity.sourceDirection.x = Math.round((X-lastX) / deltaTime * 100);
     externalVelocity.sourceDirection.y = Math.round((Y-lastY) / deltaTime * 100);
 
+    arbitraryBoundary.source.x = X * grid_resolution.x / window.innerWidth;
+    arbitraryBoundary.source.y = Y * grid_resolution.y / window.innerHeight;
+
     prevTime = currentTime;
     lastX = X;
     lastY = Y;
@@ -184,10 +198,12 @@ document.onmousedown = function(event) {
     lastX = event.clientX;
     lastY = window.innerHeight - event.clientY;
     externalVelocity.source.z = 1.0;
+    arbitraryBoundary.source.z = 1.0;
 }
 
 document.onmouseup = function(event) {
     externalVelocity.source.z = 0;
+    arbitraryBoundary.source.z = 0;
 }
 
 function render() {
@@ -198,28 +214,31 @@ function render() {
         advector.advect_texture(renderer, velocityField.read_buf, velocityField.read_buf, 1.0, 1.0, velocityField.write_buf);
         velocityField.update_read_buf();
 
-        boundary.setModeVelocity();
-        // boundary.apply_boundary_conditions(renderer, velocityField.read_buf, boundaryField.read_buf, velocityField.write_buf);
-        // velocityField.update_read_buf();
-
         /* Diffusion Step */
         for (let i = 0; i < displayConfig.JACOBI_ITERATIONS; i++) {
             jacobi.compute(renderer, 1.0, 0.20, velocityField.read_buf, velocityField.read_buf, velocityField.write_buf);
             velocityField.update_read_buf();
-
-            // boundary.apply_boundary_conditions(renderer, velocityField.read_buf, boundaryField.read_buf, velocityField.write_buf);
-            // velocityField.update_read_buf();
         }
-
-        boundary.apply_boundary_conditions(renderer, velocityField.read_buf, boundaryField.read_buf, velocityField.write_buf);
-        velocityField.update_read_buf();
         
         /* Apply external forces */
-        externalVelocity.apply_force(renderer, velocityField.read_buf, 5.0, velocityField.write_buf);
-        velocityField.update_read_buf();
+        if (displayConfig.INPUT_MODE === "Drag Fluid") {
+            externalVelocity.apply_force(renderer, velocityField.read_buf, displayConfig.RADIUS, velocityField.write_buf);
+            velocityField.update_read_buf();
+        }
 
-        // boundary.apply_boundary_conditions(renderer, velocityField.read_buf, boundaryField.read_buf, velocityField.write_buf);
-        // velocityField.update_read_buf();
+        /* Draw/Erase boundaries */
+        if (displayConfig.INPUT_MODE === "Draw Boundaries") {
+            arbitraryBoundary.draw_boundary(renderer, boundaryField.read_buf, displayConfig.RADIUS, 1.0, boundaryField.write_buf);
+            boundaryField.update_read_buf();
+        } else if (displayConfig.INPUT_MODE === "Erase Boundaries") {
+            arbitraryBoundary.draw_boundary(renderer, boundaryField.read_buf, displayConfig.RADIUS, 0.0, boundaryField.write_buf);
+            boundaryField.update_read_buf();
+        }
+
+        /* Apply no-slip velocity boundary conditions */
+        boundary.setModeVelocity();
+        boundary.apply_boundary_conditions(renderer, velocityField.read_buf, boundaryField.read_buf, velocityField.write_buf);
+        velocityField.update_read_buf();
 
         /* Calculate the divergence of the intermediate velocity field. */
         divergence2D.compute_divergence(renderer, velocityField.read_buf, divergenceField.write_buf);
@@ -229,19 +248,21 @@ function render() {
         renderer.setRenderTarget(pressureField.read_buf);
         renderer.clear();
         renderer.setRenderTarget(null);
-        boundary.setModePressure();
         for (let i = 0; i < displayConfig.JACOBI_ITERATIONS; i++) {
             jacobi.compute(renderer, -1.0, 0.25, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
             pressureField.update_read_buf();
-
-            boundary.apply_boundary_conditions(renderer, pressureField.read_buf, boundaryField.read_buf, pressureField.write_buf);
-            pressureField.update_read_buf();
         }
+
+        /* Apply pure Neumann pressure boundary conditions */
+        boundary.setModePressure();
+        boundary.apply_boundary_conditions(renderer, pressureField.read_buf, boundaryField.read_buf, pressureField.write_buf);
+        pressureField.update_read_buf();
 
         /* Projection step => Subract the pressure gradient from the intermediate velocity field to enforce incompressibility. */
         projector.subtract_gradient(renderer, pressureField.read_buf, velocityField.read_buf, velocityField.write_buf);
         velocityField.update_read_buf();
 
+        /* Apply no-slip velocity boundary conditions */
         boundary.setModeVelocity();
         boundary.apply_boundary_conditions(renderer, velocityField.read_buf, boundaryField.read_buf, velocityField.write_buf);
         velocityField.update_read_buf();

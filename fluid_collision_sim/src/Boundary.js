@@ -11,6 +11,7 @@ export default class Boundary {
         this.gridRes = res;
         this.source = new THREE.Vector3(0,0,0);
         this.sourceDirection = new THREE.Vector2(0,0);
+        this.shaderProgram = document.getElementById( 'boundaryVelocityFrag' ).innerHTML;
 
         this.uniforms = {
             gridRes: {type: 'v2', value: res},
@@ -21,7 +22,7 @@ export default class Boundary {
 
         this.material = new THREE.ShaderMaterial({
             uniforms: this.uniforms,
-            fragmentShader: document.getElementById( 'boundaryVelocityFrag' ).innerHTML,
+            fragmentShader: this.shaderProgram,
             depthWrite: false,
             depthTest: false,
             blending: THREE.NoBlending
@@ -33,12 +34,12 @@ export default class Boundary {
     }
 
     setModeVelocity() {
-        this.material.fragmentShader = document.getElementById( 'boundaryVelocityFrag' ).innerHTML;
+        this.shaderProgram = document.getElementById( 'boundaryVelocityFrag' ).innerHTML;
         this.uniforms.boundaryValue.value = 0.0;
     }
 
     setModePressure() {
-        this.material.fragmentShader = document.getElementById( 'boundaryPressureFrag' ).innerHTML;
+        this.shaderProgram = document.getElementById( 'boundaryPressureFrag' ).innerHTML;
         this.uniforms.boundaryValue.value = 1.0;
     }
 
