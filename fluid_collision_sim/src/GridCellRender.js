@@ -12,7 +12,9 @@ export default class GridCellRender {
 
         this.uniforms = {
             gridRes: {type: "v2", value: res},
-            inputTexture: {type: "t", value: null }
+            inputTexture: {type: "t", value: null },
+            scale: {type: "v3", value: null},
+            bias: {type: "v3", value: null},
         }
 
         this.material = new THREE.ShaderMaterial({
@@ -29,9 +31,10 @@ export default class GridCellRender {
         this.scene.add(this.plane);
     }
 
-    renderToTarget(renderer, input, output) {
+    renderToTarget(renderer, input, scale, bias, output) {
         this.uniforms.inputTexture.value = input.texture;
-
+        this.uniforms.scale.value = scale;
+        this.uniforms.bias.value = bias;
         renderer.setRenderTarget(output);
         renderer.render(this.scene, this.camera);
         renderer.setRenderTarget(null);
