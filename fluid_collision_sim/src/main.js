@@ -52,7 +52,7 @@ var displayConfig = {
     NUM_PARTICLES: 25000,
     NUM_RENDER_STEPS: 5,
     MAX_PARTICLE_AGE: 100,
-    V_SCALE: 20,
+    V_SCALE: 30,
     DELTA_TIME:  1.0,
     PARTICLES_ON: true,
     LAYER: "Fluid"
@@ -72,7 +72,7 @@ function initGUI() {
         "Pressure",
         "Divergence"
     ]).name("Layer");
-    gui.add(displayConfig, 'V_SCALE', 10, 50).name("Velocity Scaling Term");
+    gui.add(displayConfig, 'V_SCALE', 20, 100).name("Velocity Scaling Term");
     gui.add(displayConfig, 'JACOBI_ITERATIONS', 20, 60).name("Jacobi Iterations");
 
     // Cont.
@@ -180,7 +180,7 @@ function render() {
         advector.advect_texture(renderer, velocityField.read_buf, velocityField.read_buf, 1.0, 1.0, velocityField.write_buf);
         velocityField.update_read_buf();
 
-        /* Diffusion Step? */
+        /* Diffusion Step */
         for (let i = 0; i < displayConfig.JACOBI_ITERATIONS; i++) {
             jacobi.compute(renderer, 1.0, 0.20, velocityField.read_buf, velocityField.read_buf, velocityField.write_buf);
             velocityField.update_read_buf();
@@ -246,9 +246,6 @@ function render() {
             default:
                 break;
         }
-        // gridCellRender.renderToTarget(renderer, velocityField.read_buf, gridCellTex);
-        // gridCellRender.renderToTarget(renderer, pressureField.read_buf, gridCellTex);
-        // gridCellRender.renderToTarget(renderer, divergenceField.read_buf, gridCellTex);
     }
 
     if (displayConfig.PARTICLES_ON) {
