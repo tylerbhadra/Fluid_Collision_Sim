@@ -33,7 +33,7 @@
         float px = pixel.x;
         float py = pixel.y;
 
-        if (px > 0.47 && px < 0.53 && py > 0.45 && py < 0.55) {
+        if (px > 0.49 && px < 0.51 && py > 0.35 && py < 0.65) {
           gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
         }  else {
           gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
@@ -233,29 +233,40 @@
         vec2 uv = gl_FragCoord.xy / gridRes.xy;
         float isBoundary = texture2D(boundaryField, uv).x;
 
-        vec4 outcolor = vec4(0.0, 0.0, 0.0, 0.0);
+        vec4 outcolor = vec4(texture2D(inputTexture, uv).xy, 0.0, 0.0);
         if (isBoundary == 1.0) {
-          outcolor = vec4(boundaryValue, boundaryValue, 0.0, 1.0);
-        } else {
-          // velocity at current cell
-          vec2 v = texture2D(inputTexture, uv).xy;
-          outcolor = vec4(v, 0.0, 1.0);
+          float num_adjacent_fluid_cells = 0.0;
+          vec2 combined_neighbor_velocity = vec2(0.0, 0.0);
 
-          // Negate horizontal and vertical velocity components if they are directed into a boundary
-          if (texture2D(boundaryField, uv - ustep).x == 1.0  && v.x < 0.0) {
-            outcolor = vec4(0.0, v.y, 0.0, 1.0);
+          if (texture2D(boundaryField, uv - ustep).x == 0.0) {
+            vec2 vL = texture2D(inputTexture, uv - ustep).xy;
+            combined_neighbor_velocity = combined_neighbor_velocity + vL;
+            num_adjacent_fluid_cells += 1.0;
           }
 
-          if (texture2D(boundaryField, uv + ustep).x == 1.0 && v.x > 0.0) {
-            outcolor = vec4(0.0, v.y, 0.0, 1.0);
+          if (texture2D(boundaryField, uv + ustep).x == 0.0) {
+            vec2 vR = texture2D(inputTexture, uv + ustep).xy;
+            combined_neighbor_velocity = combined_neighbor_velocity + vR;
+            num_adjacent_fluid_cells += 1.0;
           }
 
-          if (texture2D(boundaryField, uv - vstep).x == 1.0 && v.y < 0.0) {
-            outcolor = vec4(v.x, 0.0, 0.0, 1.0);
+          if (texture2D(boundaryField, uv - vstep).x == 0.0) {
+            vec2 vB = texture2D(inputTexture, uv - vstep).xy;
+            combined_neighbor_velocity = combined_neighbor_velocity + vB;
+            num_adjacent_fluid_cells += 1.0;
           }
 
-          if (texture2D(boundaryField, uv + vstep).x == 1.0 && v.y > 0.0) {
-            outcolor = vec4(v.x, 0.0, 0.0, 1.0);
+          if (texture2D(boundaryField, uv + vstep).x == 0.0) {
+            vec2 vT = texture2D(inputTexture, uv + vstep).xy;
+            combined_neighbor_velocity = combined_neighbor_velocity + vT;
+            num_adjacent_fluid_cells += 1.0;
+          }
+
+          if (num_adjacent_fluid_cells == 0.0) {
+            outcolor = vec4(0.0, 0.0, 0.0, 1.0);
+          } else {
+            vec2 velocity_avg = combined_neighbor_velocity/num_adjacent_fluid_cells;
+            outcolor = vec4(-velocity_avg, 0.0, 1.0);
           }
         }
 
@@ -310,10 +321,10 @@
             num_adjacent_fluid_cells += 1.0;
           }
 
-          float pressure_avg = total_surrounding_pressure/num_adjacent_fluid_cells
-          if (pressure_avg == 0.0) {
-            outcolor = vec4(1.0, 0.0, 0.0, 1.0);
+          if (num_adjacent_fluid_cells == 0.0) {
+            outcolor = vec4(0.0, 0.0, 0.0, 1.0);
           } else {
+            float pressure_avg = total_surrounding_pressure/num_adjacent_fluid_cells;
             outcolor = vec4(pressure_avg, 0.0, 0.0, 1.0);
           }
         } 
@@ -336,7 +347,7 @@
         // Render boundaries as a black cell, otherwise keep cell transparent
         vec4 outcolor = texture2D(inputTexture, pixel);
         if (isBoundary == 1.0) {
-          outcolor = vec4(0.0, 0.0, 0.0, 1.0);
+          outcolor = vec4(0.3, 0.3, 0.3, 1.0);
         } 
 
         gl_FragColor = outcolor;

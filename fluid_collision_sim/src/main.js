@@ -58,10 +58,10 @@ var displayConfig = {
     JACOBI_ITERATIONS: 30,
     PAUSED: false,
     NUM_PARTICLES: 25000,
-    NUM_RENDER_STEPS: 5,
+    NUM_RENDER_STEPS: 10,
     MAX_PARTICLE_AGE: 100,
     V_SCALE: 30,
-    DELTA_TIME:  1.0,
+    DELTA_TIME: 1.0,
     PARTICLES_ON: true,
     LAYER: "Fluid"
     // Cont.
@@ -199,24 +199,27 @@ function render() {
         velocityField.update_read_buf();
 
         boundary.setModeVelocity();
-        boundary.apply_boundary_conditions(renderer, velocityField.read_buf, boundaryField.read_buf, velocityField.write_buf);
-        velocityField.update_read_buf();
+        // boundary.apply_boundary_conditions(renderer, velocityField.read_buf, boundaryField.read_buf, velocityField.write_buf);
+        // velocityField.update_read_buf();
 
         /* Diffusion Step */
         for (let i = 0; i < displayConfig.JACOBI_ITERATIONS; i++) {
             jacobi.compute(renderer, 1.0, 0.20, velocityField.read_buf, velocityField.read_buf, velocityField.write_buf);
             velocityField.update_read_buf();
 
-            boundary.apply_boundary_conditions(renderer, velocityField.read_buf, boundaryField.read_buf, velocityField.write_buf);
-            velocityField.update_read_buf();
+            // boundary.apply_boundary_conditions(renderer, velocityField.read_buf, boundaryField.read_buf, velocityField.write_buf);
+            // velocityField.update_read_buf();
         }
+
+        boundary.apply_boundary_conditions(renderer, velocityField.read_buf, boundaryField.read_buf, velocityField.write_buf);
+        velocityField.update_read_buf();
         
         /* Apply external forces */
         externalVelocity.apply_force(renderer, velocityField.read_buf, 5.0, velocityField.write_buf);
         velocityField.update_read_buf();
 
-        boundary.apply_boundary_conditions(renderer, velocityField.read_buf, boundaryField.read_buf, velocityField.write_buf);
-        velocityField.update_read_buf();
+        // boundary.apply_boundary_conditions(renderer, velocityField.read_buf, boundaryField.read_buf, velocityField.write_buf);
+        // velocityField.update_read_buf();
 
         /* Calculate the divergence of the intermediate velocity field. */
         divergence2D.compute_divergence(renderer, velocityField.read_buf, divergenceField.write_buf);
@@ -231,8 +234,8 @@ function render() {
             jacobi.compute(renderer, -1.0, 0.25, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
             pressureField.update_read_buf();
 
-            // boundary.apply_boundary_conditions(renderer, pressureField.read_buf, boundaryField.read_buf, pressureField.write_buf);
-            // pressureField.update_read_buf();
+            boundary.apply_boundary_conditions(renderer, pressureField.read_buf, boundaryField.read_buf, pressureField.write_buf);
+            pressureField.update_read_buf();
         }
 
         /* Projection step => Subract the pressure gradient from the intermediate velocity field to enforce incompressibility. */
