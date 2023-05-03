@@ -10,6 +10,7 @@ import ExternalForce from './External-Forces.js';
 import Divergence from './Divergence.js';
 import Jacobi from './Jacobi.js';
 import Gradient from './Gradient.js';
+import Boundary from './Boundary.js';
 
 var scene, camera, renderer;
 var grid_resolution = new THREE.Vector2(512, 256);
@@ -27,6 +28,7 @@ var externalVelocity;
 var divergence2D;
 var jacobi;
 var projector;
+var boundary;
 
 /* Particle simulation shader & particle position buffer */
 var particleAge;
@@ -112,6 +114,7 @@ function init_attrib_fields() {
     divergence2D = new Divergence(grid_resolution);
     jacobi = new Jacobi(grid_resolution);
     projector = new Gradient(grid_resolution);
+    boundary = new Boundary(grid_resolution);
 
     /* Initialize particle simulation shader loader, particle positions buffer and particle age buffer */
     var particleSpan = Math.sqrt(displayConfig.NUM_PARTICLES);
@@ -183,6 +186,10 @@ function render() {
             jacobi.compute(renderer, 1.0, 0.20, velocityField.read_buf, velocityField.read_buf, velocityField.write_buf);
             velocityField.update_read_buf();
         }
+
+        /* Boundary velocity step */
+        boundary.compute(renderer, -1.0, velocityField.read_buf, velocityField.write_buf);
+        velocityField.update_read_buf();
         
         /* Apply external forces */
         externalVelocity.apply_force(renderer, velocityField.read_buf, 15.0, velocityField.write_buf);
@@ -202,12 +209,22 @@ function render() {
             jacobi.compute(renderer, -1.0, 0.25, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
             // jacobi.compute(renderer, -1.0, 4, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
             pressureField.update_read_buf();
+
+            /* Boundary pressure step */
+            boundary.compute(renderer, 1.0, pressureField.read_buf, pressureField.write_buf);
+            pressureField.update_read_buf();
+
         }
 
         /* Projection step => Subract the pressure gradient from the intermediate velocity field to enforce incompressibility. */
         projector.subtract_gradient(renderer, pressureField.read_buf, velocityField.read_buf, velocityField.write_buf);
         velocityField.update_read_buf();
 
+        /* Boundary velocity step */
+        boundary.compute(renderer, -1.0, velocityField.read_buf, velocityField.write_buf);
+        velocityField.update_read_buf();
+
+        
         /* Age particles */
         particleAge.renderToTarget(renderer, particleAgeState.write_buf);
         particleAgeState.update_read_buf();
@@ -249,7 +266,7 @@ function render() {
         }
         // gridCellRender.renderToTarget(renderer, velocityField.read_buf, gridCellTex);
         // gridCellRender.renderToTarget(renderer, pressureField.read_buf, gridCellTex);
-        // gridCellRender.renderToTarget(renderer, divergenceField.read_buf, gridCellTex);
+        // gridCellRender.renderToTarget(renderer, boundaryField.read_buf, gridCellTex);
     }
 
     if (displayConfig.PARTICLES_ON) {

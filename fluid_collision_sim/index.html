@@ -97,9 +97,8 @@
         float timestep = 1.0;
         vec2 pixel = gl_FragCoord.xy / gridSize.xy;
         float dist = distance(gl_FragCoord.xy, source.xy);
-        //vec2 direction = (pixel.xy - source.xy);
         vec2 external_force = source.z * timestep * max(radius - dist, 0.0) * sourceDirection / gridSize.xy;
-        gl_FragColor = vec4(texture2D(inputTexture, pixel).xy + 4.0 * external_force.xy, 0.0, 1.0);
+        gl_FragColor = vec4(texture2D(inputTexture, pixel).xy + external_force.xy, 0.0, 1.0);
       }
     </script>
     <script id="gridCellRenderFrag" type="shader-code">
@@ -207,12 +206,43 @@
     <script id="boundaryFrag" type="shader-code">
       precision mediump float;
 
-      uniform float time;
-      uniform sampler2D boundaryField;
+      uniform float scale;    // scale parameter
+      uniform sampler2D x;    // state field
+
+      uniform vec2 gridSize;
+      uniform float gridScale;
 
       void main() {
-        float boundary_exists = 1.0;
-        gl_FragColor = vec4(boundary_exists, 0, 0, 1);
+        vec2 ustep = vec2(1.0 / gridSize.x, 0.0);
+        vec2 vstep = vec2(0.0, 1.0 / gridSize.y);
+        vec2 uv = gl_FragCoord.xy / gridSize.xy;
+
+        // left, right, bottom, and top x samples    
+        vec2 xL = texture2D(x, uv - ustep).xy;
+        vec2 xR = texture2D(x, uv + ustep).xy;
+        vec2 xB = texture2D(x, uv - vstep).xy;
+        vec2 xT = texture2D(x, uv + vstep).xy;
+
+        // left boundary
+        if (gl_FragCoord.x <= 1.0) {
+          gl_FragColor = vec4(scale * xR, 0.0, 1.0);
+        }
+        // right boundary
+        else if (gl_FragCoord.x >= (gridSize.x - 1.0)) {
+          gl_FragColor = vec4(scale * xL, 0.0, 1.0);
+        }
+        // bottom boundary
+        else if (gl_FragCoord.y <= 1.0) {
+          gl_FragColor = vec4(scale * xT, 0.0, 1.0);
+        }
+        // top boundary
+        else if (gl_FragCoord.y >= (gridSize.y - 1.0)) {
+          gl_FragColor = vec4(scale * xB, 0.0, 1.0);
+        }
+        // Not a boundary, velocity stays the same
+        else {
+          gl_FragColor = vec4(texture2D(x, uv).xy, 0.0, 1.0);
+        }
       }
     </script>
 
