@@ -45,6 +45,12 @@ var gridCellRender;
 var boundaryRender;
 var particleTex;
 var gridCellTex;
+var velocityCellScale;
+var velocityCellBias;
+var pressureCellScale;
+var pressureCellBias;
+var divergenceCellScale;
+var divergenceCellBias;
 
 /* Variables for canvas/screen render */
 var canvasMaterial;
@@ -118,6 +124,12 @@ function initAttributeFields() {
     divergenceField = new AttributeField(grid_resolution);
     pressureField = new AttributeField(grid_resolution);
     boundaryField = new AttributeField(grid_resolution);
+    velocityCellScale = new THREE.Vector3(2.0, 2.0, 2.0);
+    velocityCellBias = new THREE.Vector3(0.6, 0.6, 0.6);
+    pressureCellScale = new THREE.Vector3(4.0, 4.0, 4.0);
+    pressureCellBias = new THREE.Vector3(0.6, 0.6, 0.6);
+    divergenceCellScale = new THREE.Vector3(4.0, 4.0, 4.0);
+    divergenceCellBias = new THREE.Vector3(0.6, 0.6, 0.6);
 
     // /* This just initializes the velocityField so that the fluid initially flows to the right */
     // v_conf_inator = new ConfigInator(grid_resolution);
@@ -270,6 +282,10 @@ function runSimulation() {
         for (let i = 0; i < displayConfig.JACOBI_ITERATIONS; i++) {
             jacobi.compute(renderer, -1.0, 0.25, pressureField.read_buf, divergenceField.read_buf, pressureField.write_buf);
             pressureField.update_read_buf();
+
+            /* Boundary pressure step for divergence*/
+            boundary.compute(renderer, 1.0, pressureField.read_buf, pressureField.write_buf);
+            pressureField.update_read_buf();
         }
 
         /* Apply pure Neumann pressure boundary conditions */
@@ -351,4 +367,4 @@ initScene();
 initParticles();
 initAttributeFields();
 initShaderLoaders();
-runSimulation()
+runSimulation();
