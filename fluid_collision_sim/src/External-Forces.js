@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 /** 
- *  Applies an external force to the fluid (based on mouse position and duration of click).
+ *  Applies an external force to the fluid (Based on mouse position and duration of click).
  */
 export default class ExternalForce {
     constructor(res) {

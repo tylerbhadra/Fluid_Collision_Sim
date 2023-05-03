@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 
 /** 
- *  Applies an external force to the fluid (based on mouse position and duration of click).
+ *  Draws boundary cells to the boundaryField for later processing
+ *  in the simulation loop during boundary condition application and 
+ *  boundary rendering (Based on mouse position and duration of click).
  */
 export default class ArbitraryBoundary {
     constructor(res) {

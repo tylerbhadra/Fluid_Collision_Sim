@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 
 /**
- * Renders boundaries on top of pre-existing particleTex of gridCellTex.
+ * Renders only the boundaries to the boundaryScene which sits on top of the fluidScene 
+ * (Which is rendered using particleTex or gridCellTex).
  */
 export default class BoundaryRender {
     constructor(res) {

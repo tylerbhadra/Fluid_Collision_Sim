@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 
 /** 
- *  Takes in a texture and subtracts gradient of p from w idk
+ *  Takes in the pressureField and intermediate velocityField. Calculates the pressure gradient
+ *  for each cell and subtracts it from the velocity field to eliminate divergence from the vector field
+ *  and enforce incompressibility.
  */
 export default class Gradient {
     constructor(res) {

@@ -65,6 +65,7 @@ var displayConfig = {
     V_SCALE: 40,
     DELTA_TIME: 1.0,
     PARTICLES_ON: true,
+    VISCOUS_DIFFUSION_ON: false,
     INPUT_MODE: "Drag Fluid",
     LAYER: "Fluid",
     RADIUS: 5,
@@ -89,6 +90,7 @@ function initGUI() {
     gui.add(displayConfig, 'V_SCALE', 20, 100).name("Particle Velocity Scaling Term");
     gui.add(displayConfig, 'JACOBI_ITERATIONS', 20, 60).name("Jacobi Iterations");
     gui.add(displayConfig, 'RADIUS', 2, 10).name("Radius Size");
+    gui.add(displayConfig, 'VISCOUS_DIFFUSION_ON').name("Enable Viscous Diffusion?");
     gui.add(displayConfig, 'PAUSED').name("Pause?");
     gui.add(displayConfig, 'CLEAR_SIM').name("Clear?");
 }
@@ -110,7 +112,7 @@ function initScene() {
     camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 }
 
-function init_attrib_fields() {
+function initAttributeFields() {
 
     /* Initialize attribute fields */
     velocityField = new AttributeField(grid_resolution);
@@ -123,7 +125,9 @@ function init_attrib_fields() {
     // v_conf_inator.configure_field(renderer, velocityField.read_buf);
     // v_conf_inator.configure_field(renderer, velocityField.write_buf);
     // v_conf_inator.configure_field(renderer, boundaryField.read_buf);
+}
 
+function initShaderLoaders() {
     /* Initialize fluid simulation shader loaders */
     advector = new Advector(grid_resolution);
     externalVelocity = new ExternalForce(grid_resolution);
@@ -149,7 +153,6 @@ function init_attrib_fields() {
     gridCellTex = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
     boundaryTex = new THREE.WebGLRenderTarget( grid_resolution.x, grid_resolution.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
 
-
     /* This is for the actual render to the canvas. The canvasTex will be written to by the gridCellRender (which runs the
        shader that visualizes one of the grid attributes as colored cells in the grid) or particleRender (which loads the shader
        that visualizes the movement of the fluid using particles) */
@@ -158,12 +161,14 @@ function init_attrib_fields() {
     canvas = new THREE.Mesh( canvasGeometry, canvasMaterial );
     fluidScene.add(canvas);
 
+    /* For an additional render to a boundary layer sitting on topo of the fluidScene */
     boundaryGeometry = new THREE.PlaneGeometry( 2, 2 );
     boundaryMaterial =  new THREE.MeshBasicMaterial({map: boundaryTex.texture});
     boundaries = new THREE.Mesh( boundaryGeometry, boundaryMaterial );
     boundaryScene.add(boundaries);
 }
 
+/* INTERACTABLITY */
 var prevTime = null;
 var lastX = null;
 var lastY = null;
@@ -214,7 +219,8 @@ function clear_sim() {
     renderer.setRenderTarget(null);
 }
 
-function render() {
+/* MAIN SIMULATION LOOP */
+function runSimulation() {
     /* Implement main simulation step below, update relevant grids/buffers */
     if (!displayConfig.PAUSED) {
 
@@ -223,10 +229,12 @@ function render() {
         velocityField.update_read_buf();
 
         /* Diffusion Step */
-        for (let i = 0; i < displayConfig.JACOBI_ITERATIONS; i++) {
-            jacobi.compute(renderer, 1.0, 0.20, velocityField.read_buf, velocityField.read_buf, velocityField.write_buf);
-            velocityField.update_read_buf();
-        }
+        if (displayConfig.VISCOUS_DIFFUSION_ON) {
+            for (let i = 0; i < displayConfig.JACOBI_ITERATIONS; i++) {
+                jacobi.compute(renderer, 1.0, 0.20, velocityField.read_buf, velocityField.read_buf, velocityField.write_buf);
+                velocityField.update_read_buf();
+            }
+        }   
         
         /* Apply external forces */
         if (displayConfig.INPUT_MODE === "Drag Fluid") {
@@ -333,10 +341,11 @@ function render() {
     renderer.render(fluidScene, camera);
     renderer.render(boundaryScene, camera);
 
-    requestAnimationFrame(render);
+    requestAnimationFrame(runSimulation);
 }
 
 initGUI();
 initScene();
-init_attrib_fields();
-render()
+initAttributeFields();
+initShaderLoaders();
+runSimulation()

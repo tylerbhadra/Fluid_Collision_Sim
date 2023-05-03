@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 
 /** 
- *  Takes in a texture and jacobi's it idk what jacobi is
+ *  Takes in the divergence field and iteratively calculates the pressure values across the
+ *  fluid grid. More Jacobi iterations decreases convergence error.
  */
 export default class Jacobi {
     constructor(res) {

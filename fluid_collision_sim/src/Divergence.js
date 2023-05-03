@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 
 /** 
- *  Takes in a texture and computes its divergence
+ *  Takes in the inntermediate velocity vector field and caluclates its divergence. Renders
+ *  the output to a texture (divergenceField.write_buf) which will be passed into the Jacobi
+ *  shader program when calculating the pressure values.
  */
 export default class Divergence {
     constructor(res) {
