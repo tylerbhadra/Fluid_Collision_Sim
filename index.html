@@ -49,7 +49,7 @@
     font-family:'Courier New', Courier, monospace;
   }
 </style>
-<title>Fluids Collision Simulator</title>
+<title>Fluid Collision Simulator</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
 </head>
@@ -124,19 +124,19 @@
 
 <h3 align="middle">Framework</h3>
 <p>
-	Our simulator is built in Javascript using Threejs, which allows us to utilize WebGL 
+	Our simulator is built in Javascript using Three.js, which allows us to utilize WebGL 
 	to perform calculations and draw 3D (but we only use 2D) graphics to the screen. 
 	For each of the attributes that are able to be visualized (velocity, divergence, and pressure), 
-	we have an AttributeField class which contains textures that we have the shaders read 
-	and write to in order to update the parameters. Within our main simulation loop, we 
-	repeatedly pass these AttributeFields to their respective shaders and have them perform 
-	one timestep update, then draw the results to the screen. 
+	we have an <c1>AttributeField</c1> class which contains textures (Specifically, these are WebGLRenderTargets) 
+	that we have the shaders read and write to in order to update the parameters. Within our main simulation loop, we 
+	repeatedly pass these <c1>AttributeField</c1> buffer textures to their respective shaders and have them perform 
+	one of the calculations required to complete one timestep update, then draw the results to the screen. 
 	<br>
 	We also implemented shaders to handle the movement of randomly placed particles, which 
-	are advected along with the velocity AttributeField where they are located. Finally, 
-	we implemented user interactivity by tracking the position of the mouse and whether it 
-	is pressed or not, and add external force or a boundary to the area that the mouse drags 
-	over. 
+	are advected (at least visually) through the fluid by forward integration using the velocity
+	vector field (We use a basic euler step to achieve this). Finally, we implemented user interactivity 
+	by tracking the position of the mouse and whether it is pressed or not, and adding external forces or 
+	boundary cells to the area that the mouse drags over. 
 	<br>
 	The settings menu was created with dat.gui as a lightweight and low complexity user 
 	interface that allowed us to focus more development on the actual simulator. 
