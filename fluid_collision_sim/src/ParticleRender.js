@@ -51,7 +51,7 @@ export default class ParticleRender {
             new THREE.PlaneGeometry(2, 2),
             new THREE.MeshBasicMaterial({
                 transparent: true,
-                color: 0xffffff,
+                color: 0xf9ebd7,
                 opacity: 0.01
             })
         )
