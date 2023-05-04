@@ -66,12 +66,13 @@ var displayConfig = {
     V_SCALE: 30,
     DELTA_TIME: 1.0,
     PARTICLES_ON: true,
-    VISCOUS_DIFFUSION_ON: false,
+    VISCOUS_DIFFUSION_ON: true,
     INPUT_MODE: "Drag Fluid",
     LAYER: "Fluid",
     RADIUS: 3,
     RESET_FLUID: false,
-    CLEAR_BOUNDARIES: false
+    CLEAR_BOUNDARIES: false,
+    VISCOSITY: 5
 };
 
 function clearBoundFunc() {
@@ -94,6 +95,7 @@ function initGUI() {
     gui.add(displayConfig, 'V_SCALE', 20, 100).name("Particle Speed");
     gui.add(displayConfig, 'NUM_PARTICLES', 10000, 100000).name("Particle Count");
     gui.add(displayConfig, 'JACOBI_ITERATIONS', 20, 60).name("Jacobi Iterations");
+    gui.add(displayConfig, 'VISCOSITY', 0, 30).name("Viscous Diffusion Iterations");
     gui.add(displayConfig, 'RADIUS', 2, 10).name("Radius/Brush Size");
     gui.add(displayConfig, 'INPUT_MODE', [
         "Drag Fluid",
@@ -251,8 +253,8 @@ function runSimulation() {
 
         /* Diffusion Step */
         if (displayConfig.VISCOUS_DIFFUSION_ON) {
-            for (let i = 0; i < displayConfig.JACOBI_ITERATIONS; i++) {
-                jacobi.compute(renderer, 1.0, 0.20, velocityField.read_buf, velocityField.read_buf, velocityField.write_buf);
+            for (let i = 0; i < displayConfig.VISCOSITY; i++) {
+                jacobi.compute(renderer, 1.0, 0.2, velocityField.read_buf, velocityField.read_buf, velocityField.write_buf);
                 velocityField.update_read_buf();
             }
         }   
