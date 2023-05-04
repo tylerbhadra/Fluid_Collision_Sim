@@ -20,20 +20,7 @@
     </style>
   </head>
   <body>
-    <script id="configVelocityFrag" type="shader-code">
-      precision mediump float;
-
-      uniform vec2 gridRes;
-
-      void main() {
-        vec2 pixel  = gl_FragCoord.xy / gridRes.xy;
-
-        if (int(pixel.y) % 10 == 0) {
-          gl_FragColor = vec4(0.03, 0.0, 0.0, 1.0);
-        }
-      }
-    </script>
-
+    
     <script id="advectFrag" type="shader-code">
       precision mediump float;
 
@@ -219,7 +206,7 @@
       varying float v_magnitude;
 
       void main() {
-        gl_FragColor = vec4(0.65, 0.65 + v_magnitude/5.0, 1.0, 1.0);
+        gl_FragColor = vec4(0.55, 0.65 + v_magnitude/5.0, 0.9, 1.0);
       }
     </script>
 
@@ -454,7 +441,6 @@
     </script>
 
     <script type="module" src="src/AttributeField.js"></script>
-    <script type="module" src="src/Config-inator.js"></script>
     <script type="module" src="src/GridCellRender.js"></script>
     <script type="module" src="src/ParticleAge.js"></script>
     <script type="module" src="src/ParticleSim.js"></script>
