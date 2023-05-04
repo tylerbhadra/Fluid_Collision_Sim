@@ -20,20 +20,7 @@
     </style>
   </head>
   <body>
-    <script id="configVelocityFrag" type="shader-code">
-      precision mediump float;
-
-      uniform vec2 gridRes;
-
-      void main() {
-        vec2 pixel  = gl_FragCoord.xy / gridRes.xy;
-
-        if (pixel.x < 0.01) {
-          gl_FragColor = vec4(0.4, 0.0, 0.0, 1.0);
-        }
-      }
-    </script>
-
+    
     <script id="advectFrag" type="shader-code">
       precision mediump float;
 
