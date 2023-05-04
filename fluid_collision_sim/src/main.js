@@ -160,6 +160,9 @@ function initShaderLoaders() {
     jacobi = new Jacobi(grid_resolution);
     projector = new Gradient(grid_resolution);
     boundary = new Boundary(grid_resolution);
+    v_conf_inator = new ConfigInator(grid_resolution);
+    //Causes the left side of the screen to start with a rightward velocity, but it looks bad so commented out
+    v_conf_inator.configure_field(renderer, velocityField.read_buf);
 
     /* Initialize the shader loaders for the canvas/screen render */
     boundaryRender = new BoundaryRender(grid_resolution);
