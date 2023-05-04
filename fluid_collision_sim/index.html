@@ -28,7 +28,7 @@
       void main() {
         vec2 pixel  = gl_FragCoord.xy / gridRes.xy;
 
-        if (px < 0.01) {
+        if (pixel.x < 0.01) {
           gl_FragColor = vec4(0.4, 0.0, 0.0, 1.0);
         }
       }
@@ -454,7 +454,6 @@
     </script>
 
     <script type="module" src="src/AttributeField.js"></script>
-    <script type="module" src="src/Config-inator.js"></script>
     <script type="module" src="src/GridCellRender.js"></script>
     <script type="module" src="src/ParticleAge.js"></script>
     <script type="module" src="src/ParticleSim.js"></script>

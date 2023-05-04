@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import AttributeField from './AttributeField.js';
-import ConfigInator from './Config-inator.js';
 import GridCellRender from './GridCellRender.js';
 import ParticleSim from './ParticleSim.js';
 import ParticleRender from './ParticleRender.js';
@@ -24,7 +23,6 @@ var boundaryField;
 var pressureField;
 
 /* Simulation shader loaders */
-var v_conf_inator;
 var advector;
 var externalVelocity;
 var arbitraryBoundary;
@@ -74,7 +72,6 @@ var displayConfig = {
     RADIUS: 3,
     RESET_FLUID: false,
     CLEAR_BOUNDARIES: false
-
 };
 
 function clearBoundFunc() {
@@ -98,12 +95,6 @@ function initGUI() {
     gui.add(displayConfig, 'NUM_PARTICLES', 10000, 100000).name("Particle Count");
     gui.add(displayConfig, 'JACOBI_ITERATIONS', 20, 60).name("Jacobi Iterations");
     gui.add(displayConfig, 'RADIUS', 2, 10).name("Radius/Brush Size");
-    gui.add(displayConfig, 'VISCOUS_DIFFUSION_ON').name("Enable Viscous Diffusion");
-    gui.add(displayConfig, 'PAUSED').name("Pause");
-    // gui.add(displayConfig, 'RESET_FLUID').name("Reset Fluid");
-    gui.add(buttonFuncs, 'RESET_FLUID_FUNC').name("Reset Fluid");
-    // gui.add(displayConfig, 'CLEAR_BOUNDARIES').name("Clear Boundaries");
-    gui.add(buttonFuncs, 'CLEAR_BOUND_FUNC').name("Clear Boundaries");
     gui.add(displayConfig, 'INPUT_MODE', [
         "Drag Fluid",
         "Draw Boundaries",
@@ -115,6 +106,10 @@ function initGUI() {
         "Pressure",
         "Divergence"
     ]).name("Layer");
+    gui.add(displayConfig, 'VISCOUS_DIFFUSION_ON').name("Enable Viscous Diffusion");
+    gui.add(displayConfig, 'PAUSED').name("Pause");
+    gui.add(buttonFuncs, 'RESET_FLUID_FUNC').name("Reset Fluid");
+    gui.add(buttonFuncs, 'CLEAR_BOUND_FUNC').name("Clear Boundaries");
 }
 
 function initScene() {
@@ -146,11 +141,6 @@ function initAttributeFields() {
     pressureCellBias = new THREE.Vector3(0.6, 0.6, 0.6);
     divergenceCellScale = new THREE.Vector3(4.0, 4.0, 4.0);
     divergenceCellBias = new THREE.Vector3(0.6, 0.6, 0.6);
-
-    // /* This just initializes the velocityField so that the fluid initially flows to the right */
-    // v_conf_inator = new ConfigInator(grid_resolution);
-    // v_conf_inator.configure_field(renderer, velocityField.read_buf);
-    // v_conf_inator.configure_field(renderer, velocityField.write_buf);
 }
 
 function initParticles() {
