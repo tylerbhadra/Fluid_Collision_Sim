@@ -103,7 +103,7 @@
 	Our simulator is built in Javascript using Three.js, which allows us to utilize WebGL 
 	to perform calculations and draw 3D (but we only use 2D) graphics to the screen. 
 	For each of the attributes that are able to be visualized (velocity, divergence, and pressure), 
-	we have an <c1>AttributeField</c1> class which contains WebGLRenderTarget buffers (Specifically, these are WebGLRenderTargets) 
+	we have an <c1>AttributeField</c1> class which contains WebGLRenderTarget buffers  
 	that we have the shaders read and write to in order to update the parameters. Because we cannot read 
 	and write to the same buffer at once, we have a specific read and write buffer 
 	and switch them after each update. Within our main simulation loop, we 
