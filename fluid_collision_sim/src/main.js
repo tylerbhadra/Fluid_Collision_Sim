@@ -74,6 +74,20 @@ var displayConfig = {
     RADIUS: 3,
     RESET_FLUID: false,
     CLEAR_BOUNDARIES: false
+
+};
+
+function clearBoundFunc() {
+    displayConfig.CLEAR_BOUNDARIES = true;
+}
+
+function resetFluidFunc() {
+    displayConfig.RESET_FLUID = true;
+}
+
+var buttonFuncs = {
+    CLEAR_BOUND_FUNC: clearBoundFunc,
+    RESET_FLUID_FUNC: resetFluidFunc
 };
 
 function initGUI() {
@@ -86,8 +100,10 @@ function initGUI() {
     gui.add(displayConfig, 'RADIUS', 2, 10).name("Radius/Brush Size");
     gui.add(displayConfig, 'VISCOUS_DIFFUSION_ON').name("Enable Viscous Diffusion");
     gui.add(displayConfig, 'PAUSED').name("Pause");
-    gui.add(displayConfig, 'RESET_FLUID').name("Reset Fluid");
-    gui.add(displayConfig, 'CLEAR_BOUNDARIES').name("Clear Boundaries");
+    // gui.add(displayConfig, 'RESET_FLUID').name("Reset Fluid");
+    gui.add(buttonFuncs, 'RESET_FLUID_FUNC').name("Reset Fluid");
+    // gui.add(displayConfig, 'CLEAR_BOUNDARIES').name("Clear Boundaries");
+    gui.add(buttonFuncs, 'CLEAR_BOUND_FUNC').name("Clear Boundaries");
     gui.add(displayConfig, 'INPUT_MODE', [
         "Drag Fluid",
         "Draw Boundaries",
@@ -345,10 +361,12 @@ function runSimulation() {
 
     if (displayConfig.RESET_FLUID) {
         resetFluid();
+        displayConfig.RESET_FLUID = false;
     }
 
     if (displayConfig.CLEAR_BOUNDARIES) {
         clearBoundaries();
+        displayConfig.CLEAR_BOUNDARIES = false;
     }
 
     if (!displayConfig.RESET_FLUID && !displayConfig.CLEAR_BOUNDARIES) {
