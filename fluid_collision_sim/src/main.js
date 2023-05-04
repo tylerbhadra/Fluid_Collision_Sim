@@ -88,10 +88,10 @@ var buttonFuncs = {
 };
 
 function initGUI() {
-    var gui = new dat.GUI( { width: 450 } );
+    var gui = new dat.GUI( { width: 350 } );
 
     /* Display options */
-    gui.add(displayConfig, 'V_SCALE', 20, 100).name("Particle Velocity Scaling Term");
+    gui.add(displayConfig, 'V_SCALE', 20, 100).name("Particle Speed");
     gui.add(displayConfig, 'NUM_PARTICLES', 10000, 100000).name("Particle Count");
     gui.add(displayConfig, 'JACOBI_ITERATIONS', 20, 60).name("Jacobi Iterations");
     gui.add(displayConfig, 'RADIUS', 2, 10).name("Radius/Brush Size");
