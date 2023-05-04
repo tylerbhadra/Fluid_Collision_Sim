@@ -1,28 +1,4 @@
-<!-- <html>
-	<head>
-	</head>
-	<body>
-		<h3>CS184 Final Project Deliverables</h3>
-		<br><br>
-		<a href="/proposal/index.html">Project Proposal</a>
-		<br><br>
-		<a href="/milestone_report/index.html">Milestone Status Report</a>
-		<br><br>
-		<a href="/fluid_collision_sim/index.html">Fluid Collision Simulator</a>
-	</body>
-	<script>
-		var links = document.body.getElementsByTagName("a")
-		var a = window.location.href.indexOf(".io")
-		var repo_name = window.location.href.substring(a+3)
-		for(var i = 0; i < links.length; i++){
-			var link = links[i]
-			var actual_name = link.href.substring(link.href.indexOf(".io")+4)
-			link.href = repo_name + actual_name
-		}
-	</script>
-</html>
- -->
- <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	
 
@@ -127,10 +103,12 @@
 	Our simulator is built in Javascript using Threejs, which allows us to utilize WebGL 
 	to perform calculations and draw 3D (but we only use 2D) graphics to the screen. 
 	For each of the attributes that are able to be visualized (velocity, divergence, and pressure), 
-	we have an AttributeField class which contains textures that we have the shaders read 
-	and write to in order to update the parameters. Within our main simulation loop, we 
-	repeatedly pass these AttributeFields to their respective shaders and have them perform 
-	one timestep update, then draw the results to the screen. 
+	we have an AttributeField class which contains WebGLRenderTarget buffers that we have the shaders read 
+	and write to in order to update the parameters. Because we cannot read 
+	and write to the same buffer at once, we have a specific read and write buffer 
+	and switch them after each update. Within our main simulation loop, we 
+	repeatedly pass these AttributeFields' buffers to the respective calculation shaders 
+	and have them perform one timestep update, then draw the results to the screen. 
 	<br>
 	We also implemented shaders to handle the movement of randomly placed particles, which 
 	are advected along with the velocity AttributeField where they are located. Finally, 
@@ -146,15 +124,27 @@
 <h3 align="middle">Shaders</h3>
 <h4>Advection</h4>
 <p>
-	Advection text goes here. 
+	Advection is the process of a fluid transporting itself. For our 2D grid of 
+	attributes, we represent this as updating a grid cell to a new velocity given 
+	its previous velocity. This is calculated using an implicit method (Stam 1999) 
+	that is stable for arbitrary timesteps and velocities.
+	$$q(x, t + \delta t) = q(x - u(x, t) \delta t, t)$$
+	where q is the updated fluid property (velocity in our case), u(x, t) is the 
+	original value of the fluid property, x is the cell position, and 
+	t is the timestep (which we fix to 1.0 for our implementation).
+
 </p>
 <h4>Divergence</h4>
 <p>
 	Divergence text goes here. 
 </p>
-<h4>Pressure</h4>
+<h4>Jacobi Iteration</h4>
 <p>
-	Pressure text goes here. 
+	Jacobi Iteration text goes here. 
+</p>
+<h4>Gradient Subtraction</h4>
+<p>
+	Gradient Subtraction text goes here. 
 </p>
 <h4>External Forces</h4>
 <p>
@@ -163,10 +153,6 @@
 <h4>Boundary</h4>
 <p>
 	Boundary text goes here. 
-</p>
-<h4>Jacobi Iteration</h4>
-<p>
-	Jacobi Iteration text goes here. 
 </p>
 <h4>ParticleSim</h4>
 <p>
