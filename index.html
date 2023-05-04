@@ -1,4 +1,4 @@
-<html>
+<!-- <html>
 	<head>
 	</head>
 	<body>
@@ -20,4 +20,152 @@
 			link.href = repo_name + actual_name
 		}
 	</script>
+</html>
+ -->
+ <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>
+  body {
+    padding: 100px;
+    width: 1000px;
+    margin: auto;
+    text-align: left;
+    font-weight: 300;
+    font-family: 'Open Sans', sans-serif;
+    color: #121212;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+  c1 {
+    font-family:'Courier New', Courier, monospace;
+  }
+</style>
+<title>CS 184: Final Project Milestone Report</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2023</h1>
+<h1 align="middle">2D Fluid Simulator</h1>
+<h2 align="middle">Tyler Bhadra, Charlie Chen, Maxwell Lo, Victor Zhang</h2>
+
+<br><br>
+
+<div>
+
+	<!-- Insert Image of Simulator Here if desired -->
+<div align="middle">
+    <table style="width:100%">
+        <tr align="center">
+            <td>
+                <img style='border:1px solid #000000' src="images/TODO.gif" align="middle" width="500px"/>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<h2 align="middle">Abstract</h2>
+<p>
+    In this project, we implemented a 2D fluid simulation using Threejs and WebGL. 
+	Our simulator is based on the Navier Stokes equations and utilizes a 2D grid of 
+	attributes that determine the movement of particles within the grid. 
+	Using WebGL, we perform the relevant calculations using a set of fragment shaders 
+	that encode the various attributes and manipulate their values.
+	We also implemented interactivity allowing the user to create new forces to affect 
+	the fluid flow, construct barriers to block flow, and switch between different 
+	visualizations of the particles and attribute fields. 
+	The resulting simulation is capable of running on most modern browsers and can 
+	be seen <a href="/fluid_collision_sim/index.html">here</a>.
+</p>
+<br>
+
+<h2 align="middle">Technical Approach</h2>
+<p>
+	Technical approach text goes here
+</p>
+<br>
+
+<h2 align="middle">Problems Encountered</h2>
+<p>
+    Problems encountered go here
+</p>
+<br>
+
+<h2 align="middle">Lessons</h2>
+<p>
+    Lessons go here
+</p>
+<br>
+
+<h2 align="middle">Results</h2>
+<p>
+	In the final simulation, the user can generate forces to affect the velocity of the 
+	fluid, and construct barriers to impede the flow in real time. The user can also utilize 
+	the settings menu to visualize different aspects of the fluid.
+	<br><br>
+	To generate a force, construct a barrier, or erase a barrier, switch the "input mode" dropdown 
+	to the respective mode and click and drag on the screen. To reset the fluid velocity or clear 
+	all boundaries drawn, check and uncheck the respective boxes.
+	<br><br>
+    You can run the simulation <a href="/fluid_collision_sim/index.html">here</a>.
+</p>
+<br>
+
+<!-- PUT FINAL VIDEO HERE -->
+<div align="middle">
+    <table style="width:100%">
+      <tr align="center">
+        <td>
+          <video width="750px" controls>
+            <source src="videos/TODO.mov" type="video/mp4">
+            Your browser does not support the &lt;video&gt; tag.
+          </video>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <br><br>
+
+<br>
+
+<h2 align="middle">References</h2>
+<p>
+    References go here
+</p>
+<br>
+
+<h2 align="middle">Contributions</h2>
+<p>
+    Contributions go here
+</p>
+<br>
+
+</body>
+
+<body>
+	<h3>Pages written while project was still in progress</h3>
+	<br>
+	<a href="/proposal/index.html">Project Proposal</a>
+	<br><br>
+	<a href="/milestone_report/index.html">Milestone Status Report</a>
+	<br><br>
+	<a href="https://docs.google.com/presentation/d/1LgihI9-YyA07ZR4FKIZrS8GfaZh03c7KwcF1X6YACwU/edit?usp=share_link">Milestone Presentation Slides</a>
+	<br><br>
+	<a href="/fluid_collision_sim/index.html">Fluid Collision Simulator</a>
+</body>
+<script>
+	var links = document.body.getElementsByTagName("a")
+	var a = window.location.href.indexOf(".io")
+	var repo_name = window.location.href.substring(a+3)
+	for(var i = 0; i < links.length; i++){
+		var link = links[i]
+		var actual_name = link.href.substring(link.href.indexOf(".io")+4)
+		link.href = repo_name + actual_name
+	}
+</script>
 </html>
