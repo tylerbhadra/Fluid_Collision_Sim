@@ -24,7 +24,14 @@
  -->
  <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	
+
 <head>
+	<!-- Latex for math equations -->
+	<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async
+          src="https://cdn.jsdelivr.net/npm/mathjax@3.0.1/es5/tex-mml-chtml.js">
+  </script>
 <style>
   body {
     padding: 100px;
@@ -63,7 +70,7 @@
     <table style="width:100%">
         <tr align="center">
             <td>
-                <img style='border:1px solid #000000' src="images/TODO.gif" align="middle" width="500px"/>
+                <!-- <img style='border:1px solid #000000' src="images/TODO.gif" align="middle" width="500px"/> -->
             </td>
         </tr>
     </table>
@@ -85,8 +92,85 @@
 <br>
 
 <h2 align="middle">Technical Approach</h2>
+<h3 align="middle">Preface</h3>
 <p>
-	Technical approach text goes here
+	Our approach was based on the implementation described in 
+	<a href="https://developer.nvidia.com/gpugems/gpugems/part-vi-beyond-triangles/chapter-38-fast-fluid-dynamics-simulation-gpu">Nvidia Developer Chapter 38</a>,
+	which we used as a reference for implementing the Navier-Stokes calculations. 
+	We also created a particle simulation on top of the 2D attribute grid to better display 
+	the movement of the fluid<!--TODO: Ref?-->, as well as internal boundary conditions to allow for user 
+	drawn barriers<!--TODO: Ref?-->. 
+</p>
+<br>
+
+<h3 align="middle">Navier Stokes Equations</h3>
+<p>
+	Our fluid simulation is based on the Navier Stokes equations and assume an incompressible homogenous fluid.
+	The Navier Stokes equations (for an incompressible fluid) are as follows:
+	<br>
+	$$\frac{\partial u}{\partial t} = -(u \cdot \nabla)u - \frac{1}{\rho} \nabla p + v \nabla^2 u + F$$
+	$$\nabla \cdot u = 0$$
+	<br>
+	Where u represents the flow velocity, p represents pressure, v represents viscosity, and 
+	F is the effect of external forces, which in our simulation, is the user mouse click. 
+	Looking at each term, we have Variation = Advection - Pressure + Diffusion + External Forces. 
+	<br>
+	To calculate the effects of the Navier Stokes equations, we took each term and had a 
+	different shader perform the calculations by storing the results to a texture map. Thus, 
+	we had a shader for advection, one for pressure, one for diffusion, as well as a few 
+	shaders for intermediate calculations such as jacobi iteration.
+</p>
+<br>
+
+<h3 align="middle">Framework</h3>
+<p>
+	Our simulator is built in Javascript using Threejs, which allows us to utilize WebGL 
+	to perform calculations and draw 3D (but we only use 2D) graphics to the screen. 
+	For each of the attributes that are able to be visualized (velocity, divergence, and pressure), 
+	we have an AttributeField class which contains textures that we have the shaders read 
+	and write to in order to update the parameters. Within our main simulation loop, we 
+	repeatedly pass these AttributeFields to their respective shaders and have them perform 
+	one timestep update, then draw the results to the screen. 
+	<br>
+	We also implemented shaders to handle the movement of randomly placed particles, which 
+	are advected along with the velocity AttributeField where they are located. Finally, 
+	we implemented user interactivity by tracking the position of the mouse and whether it 
+	is pressed or not, and add external force or a boundary to the area that the mouse drags 
+	over. 
+	<br>
+	The settings menu was created with dat.gui as a lightweight and low complexity user 
+	interface that allowed us to focus more development on the actual simulator. 
+</p>
+<br>
+
+<h3 align="middle">Shaders</h3>
+<h4>Advection</h4>
+<p>
+	Advection text goes here. 
+</p>
+<h4>Divergence</h4>
+<p>
+	Divergence text goes here. 
+</p>
+<h4>Pressure</h4>
+<p>
+	Pressure text goes here. 
+</p>
+<h4>External Forces</h4>
+<p>
+	External force text goes here. 
+</p>
+<h4>Boundary</h4>
+<p>
+	Boundary text goes here. 
+</p>
+<h4>Jacobi Iteration</h4>
+<p>
+	Jacobi Iteration text goes here. 
+</p>
+<h4>ParticleSim</h4>
+<p>
+	Particle simulation text goes here. 
 </p>
 <br>
 
@@ -122,7 +206,7 @@
       <tr align="center">
         <td>
           <video width="750px" controls>
-            <source src="videos/TODO.mov" type="video/mp4">
+            <!-- <source src="videos/TODO.mov" type="video/mp4"> -->
             Your browser does not support the &lt;video&gt; tag.
           </video>
         </td>
