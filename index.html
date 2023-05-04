@@ -136,19 +136,41 @@
 </p>
 <h4>Divergence</h4>
 <p>
-	Divergence text goes here. 
+	Divergence measures the change in velocity across a surface surrounding a 
+	small area of fluid. We then update the velocity field according to the 
+	following formula:
+	$$\nabla \cdot u = \frac{\delta u}{\delta x} + \frac{\delta v}{\delta y} 
+	= \frac{u_{i+1, j} - u_{i-1, j}}{2\delta x} + \frac{v_{i, j+1} - v_{i, j-1}}{2\delta y}$$
+	where u and v are parameters of the velocity field u = (u, v).
+
 </p>
 <h4>Jacobi Iteration</h4>
 <p>
-	Jacobi Iteration text goes here. 
+	Jacobi iteration is an iterative technique that converges towards a solution for a 
+	system of linear equations. We use it here to solve poisson equations, which include 
+	the pressure field and the viscosity term. 
+	$$x_{i, j}^{k+1} = \frac{x_{i-1, j}^k + x_{i+1, j}^k + x_{i, j-1}^k + x_{i, j+1}^k + \alpha b_{i, j}}{\beta}$$
+	where x is the field (pressure or velocity), b is the divergence, alpha and beta are constants.
 </p>
 <h4>Gradient Subtraction</h4>
 <p>
-	Gradient Subtraction text goes here. 
+	To ensure that we have an incompressible fluid (which means divergence is 0 by Navier Stokes), we subtract 
+	the pressure gradient from the velocity field.
+	$$u = w - \nabla p$$
+	Combining divergence, the poisson pressure distribution, 
+	and gradient subtraction gives us the pressure term in the Navier Stokes equation, which describes 
+	projection of the fluid from high pressure to low pressure areas.
 </p>
 <h4>External Forces</h4>
 <p>
-	External force text goes here. 
+	When the user clicks their mouse and drags, we generate a force that is added to the velocity 
+	field in the direction of the drag. This follows the following formula:
+	$$c = F \delta t \frac{(x - x_p)^2 + (y-y_p)^2}{r}
+	$$
+	where c is the representation of force to add to the velocity field, F is the force 
+	computed from the mouse drag, and (x, y) and (xp, yp) are the cell position and click position. 
+	We see that the large fraction is simply distance over radius, so that the cells closest to 
+	the mouse have the greatest increase.
 </p>
 <h4>Boundary</h4>
 <p>
