@@ -275,17 +275,13 @@
 
 <h2 align="middle">Problems Encountered</h2>
 <p>
-    Initially, we had some trouble with getting the framework set up to be able to render the 
-    particle simulation, as none of us had prior experience working with three.js or WebGL. Additionally, 
-	until we implemented most of the features (advection, pressure, diffusion, external forces), 
-	it was difficult to debug our output besides checking that the screen rendered what we expected 
-	it to, as the error messages for gpu shaders were very nondescriptive. 
+    We encountered a problem after implementing particles and some of the basic computational steps for a very basic fluid simulation where we could interact with our cursor to move the fluid around, but the movement and velocity would not propagate through regions of the fluid that had not been interacted with yet. To address this, we added the ability to change the display to the different results of the shaders and compared the results to the results of another known working fluid simulator. It was through this that we found out that the pressure layer was not being calculated properly since interacting with the cursor would not make any change to the layer at all. After pouring over the code, we eventually stumbled upon the source of the problems: we had capitalized a variable incorrectly, causing it to reference some garbage value. After correcting this variable name, the simulator started propagating velocity through the fluid, allowing any disturbances from the user to spread out across the screen.
 </p>
 <br>
 
 <h2 align="middle">Lessons</h2>
 <p>
-    Lessons go here
+    Some lessons learned include how to use the GPU to perform lots of calculations in parallel provided so long as you manipulate the data in a manner that the GPU can handle, in our case, through the use of shaders. We also learned how to use WebGL from using Three.js to manipulate said shaders.
 </p>
 <br>
 
