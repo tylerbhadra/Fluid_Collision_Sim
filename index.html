@@ -243,7 +243,7 @@
 	<table style="width:100%">
 		<tr align="center">
 		<td>
-			<img src="images/stream.gif" align="middle" width="550px"/>
+			<img style='border:2px solid #000000' src="images/stream.gif" align="middle" width="550px"/>
 			<figcaption>Fluid interaction with downstream obstacles.</figcaption>
 		</td>
 		</tr>
@@ -251,9 +251,25 @@
 </div>
 <br>
 
-<h4>ParticleSim</h4>
+<h4 align="middle">Particles</h4>
 <p>
-	Particle simulation text goes here. 
+	There are three main shaders used for simulating and rendering particles with the trail effect. The particle simulation 
+	shader is purely for simulating the movement of the particles. It takes in a texture buffer of particle positions, as well 
+	as the <c1>velocityField</c1>, and calculates new positions using forward integration, storing them in a new WebGLRenderTarget.  
+	Essentially we are moving the particles according to where they sit on top of the velocity vector field. (NOTE: The resolution 
+	of the particle positions texture is <c1>particle_span</c1> x <c1>particle_span</c1>, where <c1>particle_span</c1> equals 
+	the square root of the number of particles)
+</p>
+<p>
+	The particle aging shader keeps track of and increment each particles age in a particle age texture and is the same resolution as the 
+	particle positions texture. This ensures that any texture coordinate <m1>(<sub> </sub>u, v<sub> </sub>)</m1> corresponds 
+	to only one position and one age. When a particle reaches its max lifespan (We used 100 timesteps) it is returned to its 
+	initial position. This keeps the particles from moving offscreen.
+</p>
+<p>
+	The particle rendering shader takes in the particle positions and renders them to a canvas texture which is used later 
+	during the final render to the screen. To achieve the trailing effect, a semi transparent plane is rendered on top of the 
+	particles at every timestep (We use an opacity of <c1>0.01</c1>).
 </p>
 <br>
 
@@ -300,30 +316,73 @@
 
 <br>
 
-<h2 align="middle">References</h2>
+<h2 align="middle">Contributions</h2>
 <p>
-    References go here
+    <b>Tyler Bhadra:</b> 
+	<p>
+		Built the project framework for loading and running shaders for GPU simulation and set up 
+		the rendering environment used for the visualization of fluid behavior (With three.js and WebGL). Implemented 
+		the particle system shaders (For particle aging, simulation, and trail rendering). Implemented fluid 
+		interaction with arbitrarily placed boundaries. Also implemented boundary interactability (draw/erase functionality) 
+		and co-wrote the milestone report and final report with Maxwell.
+	</p>
+</p>
+<p>
+    <b>Charlie Chen:</b> 
+	<p>
+		Implemented the Jacobi, Gradient, and Divergence shader programs used in the viscous diffusion step 
+		and projection step. Worked on the visualization of grid attributes (Pressure, divergence, velocity) with Maxwell. 
+		Helped with fluid-boundary interactions. Also. added GUI elements and worked on the final presentation slides.
+	</p>
+</p>
+<p>
+    <b>Maxwell Lo:</b> 
+	<p>
+		Wrote the Advection shader program and the External Forces shader program. Also implemented the interactive 
+		“Drag Fluid” functionality. Worked on the visualization of grid attributes (Pressure, divergence, velocity) with Charlie. 
+		Put together the milestone presentation slides and co-wrote the milestone report and final report with Tyler.
+	</p>
+</p>
+<p>
+    <b>Victor Zhang:</b> 
+	<p>
+		Worked on the final presentation slides. Filmed both the milestone progress report video and the 
+		final demo video. Helped debug the Jacobi, Gradient, and Divergence shader programs. Also fleshed out the GUI display 
+		options to allow for user selection of visualization layers (i.e. fluid, velocity, pressure, and divergence) and added 
+		buttons for resetting fluid and boundary states.
+	</p>
 </p>
 <br>
 
-<h2 align="middle">Contributions</h2>
-<p>
-    Contributions go here
+<h2 align="middle">References</h2>
+<p align="middle">
+	<a href="https://github.com/weymouth/lily-pad">LilyPad,  weymouth</a>
+	<br><br>
+	<a href="https://github.com/PavelDoGreat/WebGL-Fluid-Simulation">WebGL Fluid Simulation,  PavelDoGreat</a>
+	<br><br>
+	<a href="https://github.com/amandaghassaei/gpu-io/blob/main/examples/fluid/index.js">gpu-io,  Amanda Ghassaei</a>
+	<br><br>
+	<a href="https://developer.nvidia.com/gpugems/gpugems/part-vi-beyond-triangles/chapter-38-fast-fluid-dynamics-simulation-gpu">GPU Gems, Chapter 38: Fast Fluid Dynamics Simulation on the GPU</a>
+	<br><br>
+    <a href="http://barradeau.com/blog/?p=621">FBO Particles</a>
+	<br><br>
+	<a href="https://www.dgp.toronto.edu/public_user/stam/reality/Research/pdf/ns.pdf">Stable Fluids,  Jos Stam</a>
 </p>
 <br>
 
 </body>
 
 <body>
-	<h3>Pages written while project was still in progress</h3>
-	<br>
-	<a href="/proposal/index.html">Project Proposal</a>
-	<br><br>
-	<a href="/milestone_report/index.html">Milestone Status Report</a>
-	<br><br>
-	<a href="https://docs.google.com/presentation/d/1LgihI9-YyA07ZR4FKIZrS8GfaZh03c7KwcF1X6YACwU/edit?usp=share_link">Milestone Presentation Slides</a>
-	<br><br>
-	<a href="/fluid_collision_sim/index.html">Fluid Collision Simulator</a>
+	<h2 align="middle">Deliverables</h2>
+	<p align="middle">
+		<a href="/proposal/index.html">Project Proposal</a>
+		<br><br>
+		<a href="/milestone_report/index.html">Milestone Status Report</a>
+		<br><br>
+		<a href="https://docs.google.com/presentation/d/1LgihI9-YyA07ZR4FKIZrS8GfaZh03c7KwcF1X6YACwU/edit?usp=sharing">Milestone Presentation Slides</a>
+		<br><br>
+		<a href="/fluid_collision_sim/index.html">Fluid Collision Simulator</a>
+	</p>
 </body>
 <script>
 	var links = document.body.getElementsByTagName("a")
