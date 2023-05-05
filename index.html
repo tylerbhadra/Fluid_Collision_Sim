@@ -236,7 +236,7 @@
 	$$u_{i, j} = -\frac{u_{i, j+1} + u_{i+1, j}}{2} $$
 </p>
 <p>
-	Pressure values are calculated in the same way, except the average value is not negated
+	Pressure values are calculated in the same way, except the average value is not negated.
 </p>
 <br>
 
@@ -262,10 +262,11 @@
 	the square root of the number of particles)
 </p>
 <p>
-	The particle aging shader keeps track of and increment each particles age in a particle age texture and is the same resolution as the 
+	The particle aging shader keeps track of and increments each particles age in a particle age texture and is the same resolution as the 
 	particle positions texture. This ensures that any texture coordinate <m1>(<sub> </sub>u, v<sub> </sub>)</m1> corresponds 
-	to only one position and one age. When a particle reaches its max lifespan (We used 100 timesteps) it is returned to its 
-	initial position. This keeps the particles from moving offscreen.
+	to only one position and one age (i.e a specific texture coordinate <m1>(<sub> </sub>u, v<sub> </sub>)</m1> is associated 
+	with one specific particle and its relevant information). When a particle reaches its max lifespan (We used 100 timesteps) it 
+	is returned to its initial position. This keeps the particles from moving offscreen.
 </p>
 <p>
 	The particle rendering shader takes in the particle positions and renders them to a canvas texture which is used later 
@@ -299,8 +300,8 @@
 <h2 align="middle">Lessons</h2>
 <p>
     Some lessons learned include how to use the GPU to perform lots of calculations in parallel 
-	provided so long as you manipulate the data in a manner that the GPU can handle, in our case, 
-	through the use of shaders. We also learned how to use WebGL from using Three.js to manipulate 
+	provided that you manipulate the data in a manner that the GPU can handle. In our case, 
+	this was through the use of shaders. We also learned how to use WebGL from using Three.js to manipulate 
 	said shaders, and gained insight as to how the Navier-Stokes equations work and the various 
 	terms used to describe the velocity of the fluid.
 </p>
@@ -345,7 +346,7 @@
 		the rendering environment used for the visualization of fluid behavior (With three.js and WebGL). Implemented 
 		the particle system shaders (For particle aging, simulation, and trail rendering). Implemented fluid 
 		interaction with arbitrarily placed boundaries. Also implemented boundary interactability (draw/erase functionality) 
-		and co-wrote the milestone report and final report with Maxwell.
+		and co-wrote the milestone report and final report with Maxwell and Victor.
 	</p>
 </p>
 <p>
@@ -353,7 +354,7 @@
 	<p>
 		Implemented the Jacobi, Gradient, and Divergence shader programs used in the viscous diffusion step 
 		and projection step. Worked on the visualization of grid attributes (Pressure, divergence, velocity) with Maxwell. 
-		Helped with fluid-boundary interactions. Also. added GUI elements and worked on the final presentation slides.
+		Helped with fluid-boundary interactions. Also, added GUI elements and worked on the final presentation slides.
 	</p>
 </p>
 <p>
@@ -361,7 +362,7 @@
 	<p>
 		Wrote the Advection shader program and the External Forces shader program. Also implemented the interactive 
 		“Drag Fluid” functionality. Worked on the visualization of grid attributes (Pressure, divergence, velocity) with Charlie. 
-		Put together the milestone presentation slides and co-wrote the milestone report and final report with Tyler.
+		Put together the milestone presentation slides and co-wrote the milestone report and final report with Tyler and Victor.
 	</p>
 </p>
 <p>
@@ -370,7 +371,7 @@
 		Worked on the final presentation slides. Filmed both the milestone progress report video and the 
 		final demo video. Helped debug the Jacobi, Gradient, and Divergence shader programs. Also fleshed out the GUI display 
 		options to allow for user selection of visualization layers (i.e. fluid, velocity, pressure, and divergence) and added 
-		buttons for resetting fluid and boundary states.
+		buttons for resetting fluid and boundary states. Co-wrote the final report with Maxwell and Tyler.
 	</p>
 </p>
 <br>
