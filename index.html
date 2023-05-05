@@ -24,6 +24,10 @@
   c1 {
     font-family:'Courier New', Courier, monospace;
   }
+  m1 {
+    font-family:'Times New Roman', Times, serif;
+    font-size: 18px;
+  }
 </style>
 <title>Fluid Collision Simulator</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
@@ -46,7 +50,19 @@
     <table style="width:100%">
         <tr align="center">
             <td>
-                <!-- <img style='border:1px solid #000000' src="images/TODO.gif" align="middle" width="500px"/> -->
+                <img style='border:1px solid #000000' src="images/1024x512_fluid_drag.png" align="middle" width="500px"/>
+            </td>
+			<td>
+                <img style='border:1px solid #000000' src="images/1024x512_fluid_channel.png" align="middle" width="482px"/>
+            </td>
+        </tr>
+    </table>
+</div>
+<div align="middle">
+    <table style="width:100%">
+        <tr align="center">
+            <td>
+                <img style='border:1px solid #000000' src="images/1024x512_stream_barriers.png" align="middle" width="500px"/>
             </td>
         </tr>
     </table>
@@ -98,7 +114,7 @@
 </p>
 <br>
 
-<h3 align="middle">Framework</h3>
+<h3 align="middle"> Project Framework</h3>
 <p>
 	Our simulator is built in Javascript using Three.js, which allows us to utilize WebGL 
 	to perform calculations and draw 3D (but we only use 2D) graphics to the screen. 
@@ -109,20 +125,22 @@
 	and switch them after each update. Within our main simulation loop, we 
 	repeatedly pass these <c1>AttributeField</c1> buffer textures' buffers to the respective calculation shaders 
 	and have them perform one of the calculations required to complete one timestep update, then draw the results to the screen. 
-	<br>
+</p>
+<p>
 	We also implemented shaders to handle the movement of randomly placed particles, which 
 	are advected (at least visually) through the fluid by forward integration using the velocity
 	vector field (We use a basic euler step to achieve this). Finally, we implemented user interactivity 
 	by tracking the position of the mouse and whether it is pressed or not, and adding external forces or 
 	boundary cells to the area that the mouse drags over. 
-	<br>
+</p>
+<p>
 	The settings menu was created with dat.gui as a lightweight and low complexity user 
 	interface that allowed us to focus more development on the actual simulator. 
 </p>
 <br>
 
 <h3 align="middle">Shaders</h3>
-<h4>Advection</h4>
+<h4 align="middle">Advection</h4>
 <p>
 	Advection is the process of a fluid transporting itself. For our 2D grid of 
 	attributes, we represent this as updating a grid cell to a new velocity given 
@@ -134,7 +152,9 @@
 	t is the timestep (which we fix to 1.0 for our implementation).
 
 </p>
-<h4>Divergence</h4>
+<br>
+
+<h4 align="middle">Divergence</h4>
 <p>
 	Divergence measures the change in velocity across a surface surrounding a 
 	small area of fluid. We then update the velocity field according to the 
@@ -144,7 +164,9 @@
 	where u and v are parameters of the velocity field u = (u, v).
 
 </p>
-<h4>Jacobi Iteration</h4>
+<br>
+
+<h4 align="middle">Jacobi Iteration</h4>
 <p>
 	Jacobi iteration is an iterative technique that converges towards a solution for a 
 	system of linear equations. We use it here to solve poisson equations, which include 
@@ -152,7 +174,9 @@
 	$$x_{i, j}^{k+1} = \frac{x_{i-1, j}^k + x_{i+1, j}^k + x_{i, j-1}^k + x_{i, j+1}^k + \alpha b_{i, j}}{\beta}$$
 	where x is the field (pressure or velocity), b is the divergence, alpha and beta are constants.
 </p>
-<h4>Gradient Subtraction</h4>
+<br>
+
+<h4 align="middle">Gradient Subtraction</h4>
 <p>
 	To ensure that we have an incompressible fluid (which means divergence is 0 by Navier Stokes), we subtract 
 	the pressure gradient from the velocity field.
@@ -161,7 +185,9 @@
 	and gradient subtraction gives us the pressure term in the Navier Stokes equation, which describes 
 	projection of the fluid from high pressure to low pressure areas.
 </p>
-<h4>External Forces</h4>
+<br>
+
+<h4 align="middle">External Forces</h4>
 <p>
 	When the user clicks their mouse and drags, we generate a force that is added to the velocity 
 	field in the direction of the drag. This follows the following formula:
@@ -172,13 +198,78 @@
 	We see that the large fraction is simply distance over radius, so that the cells closest to 
 	the mouse have the greatest increase.
 </p>
-<h4>Boundary</h4>
+<br>
+
+<h4 align="middle">Boundaries</h4>
 <p>
-	Boundary text goes here. 
+	In order to implement boundaries, we needed to enforce no-slip velocity boundary conditions and pure 
+	Neumann pressure boundary conditions after modifying the <c1>velocityField</c1> and <c1>pressureField</c1>. 
+	Within the other shader programs it is assumed that every grid cell lies within the fluid domain. The
+	boundary shader programs adjust the velocities and pressure values acquired through the simulation process 
+	to take into account the existence of grid cells that lie in the boundary domain.
 </p>
-<h4>ParticleSim</h4>
 <p>
-	Particle simulation text goes here. 
+	No-slip velocity boundary conditions are applied differently depending on the type of boundary cell we are dealing
+	with. The first type is a boundary cell that borders only one fluid cell. 
+</p>
+<p>
+	For example, in the case of a boundary cell <c1>B_W</c1> located at cell (i,j) with a fluid cell to its left in 
+	cell (i-1,j), we set the velocity of the boundary cell to the negated velocity of its fluid cell neighbor, 
+	following this constraint equation:
+</p>
+<p>
+	$$\frac{u_{i-1 , j} - u_{i , j}}{2}$$
+</p>
+<p>
+	To enforce pure Neumann pressure boundary conditions, we set the pressure value of a boundary cell to the pressure 
+	value of its fluid cell neighbor, following this constraint equation:
+</p>
+<p>
+	$$\frac{p_{i-1 , j} - p_{i , j}}{\delta x}$$
+</p>
+<p>
+	In the case where a boundary cell borders multiple fluid cells, we simply set the boundary velocity to the negated 
+	average of all its neighboring fluid cell velocities. For a boundary cell <c1>B_NE</c1> with neigboring fluid cells in its 
+	north and east directions, the boundary velocity <i><m1>u<sub>i,j</sub></m1></i> is computed as such:
+</p>
+<p>
+	$$u_{i, j} = -\frac{u_{i, j+1} + u_{i+1, j}}{2} $$
+</p>
+<p>
+	Pressure values are calculated in the same way, except the average value is not negated
+</p>
+
+<div align="middle">
+	<table style="width:100%">
+		<tr align="center">
+		<td>
+			<img style='border:2px solid #000000' src="images/stream.gif" align="middle" width="550px"/>
+			<figcaption>Fluid interaction with downstream obstacles.</figcaption>
+		</td>
+		</tr>
+	</table>
+</div>
+<br>
+
+<h4 align="middle">Particles</h4>
+<p>
+	There are three main shaders used for simulating and rendering particles with the trail effect. The particle simulation 
+	shader is purely for simulating the movement of the particles. It takes in a texture buffer of particle positions, as well 
+	as the <c1>velocityField</c1>, and calculates new positions using forward integration, storing them in a new WebGLRenderTarget.  
+	Essentially we are moving the particles according to where they sit on top of the velocity vector field. (NOTE: The resolution 
+	of the particle positions texture is <c1>particle_span</c1> x <c1>particle_span</c1>, where <c1>particle_span</c1> equals 
+	the square root of the number of particles)
+</p>
+<p>
+	The particle aging shader keeps track of and increment each particles age in a particle age texture and is the same resolution as the 
+	particle positions texture. This ensures that any texture coordinate <m1>(<sub> </sub>u, v<sub> </sub>)</m1> corresponds 
+	to only one position and one age. When a particle reaches its max lifespan (We used 100 timesteps) it is returned to its 
+	initial position. This keeps the particles from moving offscreen.
+</p>
+<p>
+	The particle rendering shader takes in the particle positions and renders them to a canvas texture which is used later 
+	during the final render to the screen. To achieve the trailing effect, a semi transparent plane is rendered on top of the 
+	particles at every timestep (We use an opacity of <c1>0.01</c1>).
 </p>
 <br>
 
@@ -229,30 +320,81 @@
 
 <br>
 
-<h2 align="middle">References</h2>
+<h2 align="middle">Contributions</h2>
 <p>
-    References go here
+    <b>Tyler Bhadra:</b> 
+	<p>
+		Built the project framework for loading and running shaders for GPU simulation and set up 
+		the rendering environment used for the visualization of fluid behavior (With three.js and WebGL). Implemented 
+		the particle system shaders (For particle aging, simulation, and trail rendering). Implemented fluid 
+		interaction with arbitrarily placed boundaries. Also implemented boundary interactability (draw/erase functionality) 
+		and co-wrote the milestone report and final report with Maxwell.
+	</p>
+</p>
+<p>
+    <b>Charlie Chen:</b> 
+	<p>
+		Implemented the Jacobi, Gradient, and Divergence shader programs used in the viscous diffusion step 
+		and projection step. Worked on the visualization of grid attributes (Pressure, divergence, velocity) with Maxwell. 
+		Helped with fluid-boundary interactions. Also. added GUI elements and worked on the final presentation slides.
+	</p>
+</p>
+<p>
+    <b>Maxwell Lo:</b> 
+	<p>
+		Wrote the Advection shader program and the External Forces shader program. Also implemented the interactive 
+		“Drag Fluid” functionality. Worked on the visualization of grid attributes (Pressure, divergence, velocity) with Charlie. 
+		Put together the milestone presentation slides and co-wrote the milestone report and final report with Tyler.
+	</p>
+</p>
+<p>
+    <b>Victor Zhang:</b> 
+	<p>
+		Worked on the final presentation slides. Filmed both the milestone progress report video and the 
+		final demo video. Helped debug the Jacobi, Gradient, and Divergence shader programs. Also fleshed out the GUI display 
+		options to allow for user selection of visualization layers (i.e. fluid, velocity, pressure, and divergence) and added 
+		buttons for resetting fluid and boundary states.
+	</p>
 </p>
 <br>
 
-<h2 align="middle">Contributions</h2>
-<p>
-    Contributions go here
+<h2 align="middle">References</h2>
+<p align="middle">
+	<a href="https://github.com/weymouth/lily-pad">LilyPad</a>
+	<br><br>
+	<a href="https://physics.weber.edu/schroeder/fluids/">Fluid Dynamics Simulation, Dan Schroeder</a>
+	<br><br>
+	<a href="https://github.com/PavelDoGreat/WebGL-Fluid-Simulation">WebGL Fluid Simulation</a>
+	<br><br>
+	<a href="https://github.com/rachelbhadra/smoke_simulator">Smoke Simulation</a>
+	<br><br>
+	<a href="https://github.com/amandaghassaei/gpu-io/blob/main/examples/fluid/index.js">gpu-io</a>
+	<br><br>
+	<a href="https://developer.nvidia.com/gpugems/gpugems/part-vi-beyond-triangles/chapter-38-fast-fluid-dynamics-simulation-gpu">GPU Gems, Chapter 38: Fast Fluid Dynamics Simulation on the GPU</a>
+	<br><br>
+    <a href="http://barradeau.com/blog/?p=621">FBO Particles</a>
+	<br><br>
+	<a href="https://www.dgp.toronto.edu/public_user/stam/reality/Research/pdf/ns.pdf">Stable Fluids,  Jos Stam</a>
+	<br><br>
+	<a href="https://inside.mines.edu/~jpaone/papers/renderingWater.pdf">Rendering Water Using Compute Shaders and Navier Stokes Equations, Ivan Krukov</a>
 </p>
 <br>
 
 </body>
 
 <body>
-	<h3>Pages written while project was still in progress</h3>
-	<br>
-	<a href="/proposal/index.html">Project Proposal</a>
-	<br><br>
-	<a href="/milestone_report/index.html">Milestone Status Report</a>
-	<br><br>
-	<a href="https://docs.google.com/presentation/d/1LgihI9-YyA07ZR4FKIZrS8GfaZh03c7KwcF1X6YACwU/edit?usp=share_link">Milestone Presentation Slides</a>
-	<br><br>
-	<a href="/fluid_collision_sim/index.html">Fluid Collision Simulator</a>
+	<h2 align="middle">Deliverables</h2>
+	<p align="middle">
+		<a href="/proposal/index.html">Project Proposal</a>
+		<br><br>
+		<a href="/milestone_report/index.html">Milestone Status Report</a>
+		<br><br>
+		<a href="https://docs.google.com/presentation/d/1LgihI9-YyA07ZR4FKIZrS8GfaZh03c7KwcF1X6YACwU/edit?usp=sharing">Milestone Presentation Slides</a>
+		<br><br>
+		<a href="https://docs.google.com/presentation/d/1WlIjTLvA51g0U1x2rq4SyW24QVdCxenjaggzpMY8E-w/edit?usp=sharing">Final Presentation Slides</a>
+		<br><br>
+		<a href="/fluid_collision_sim/index.html">Fluid Collision Simulator</a>
+	</p>
 </body>
 <script>
 	var links = document.body.getElementsByTagName("a")
