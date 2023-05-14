@@ -11,8 +11,8 @@ export default class AttributeField {
     read_buf;
     write_buf;
     constructor(gridRes) {
-        this.read_buf = new THREE.WebGLRenderTarget(gridRes.x, gridRes.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
-        this.write_buf = new THREE.WebGLRenderTarget(gridRes.x, gridRes.y, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
+        this.read_buf = new THREE.WebGLRenderTarget(gridRes.x, gridRes.y, { wrapS: THREE.RepeatWrapping, wrapT:  THREE.RepeatWrapping, minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
+        this.write_buf = new THREE.WebGLRenderTarget(gridRes.x, gridRes.y, { wrapS: THREE.RepeatWrapping, wrapT:  THREE.RepeatWrapping, minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType });
     }
 
     update_read_buf() {

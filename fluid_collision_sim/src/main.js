@@ -14,7 +14,7 @@ import BoundaryRender from './BoundaryRender.js';
 import ArbitraryBoundary from './Arbitrary-Boundaries.js';
 
 var fluidScene, camera, renderer;
-var grid_resolution = new THREE.Vector2(512, 256);
+var grid_resolution = new THREE.Vector2(640, 360);
 
 /* Attribute Fields */
 var velocityField;
@@ -66,10 +66,10 @@ var displayConfig = {
     V_SCALE: 30,
     DELTA_TIME: 1.0,
     PARTICLES_ON: true,
-    VISCOUS_DIFFUSION_ON: true,
+    VISCOUS_DIFFUSION_ON: false,
     INPUT_MODE: "Drag Fluid",
     LAYER: "Fluid",
-    RADIUS: 3,
+    RADIUS: 4,
     RESET_FLUID: false,
     CLEAR_BOUNDARIES: false,
     VISCOSITY: 5
