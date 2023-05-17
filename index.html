@@ -79,7 +79,7 @@
 	the fluid flow, construct barriers to block flow, and switch between different 
 	visualizations of the particles and attribute fields. 
 	The resulting simulation is capable of running on most modern browsers and can 
-	be seen <a href="/fluid_collision_sim/index.html">here</a>.
+	be seen <a href="fluid_collision_sim/index.html">here</a>.
 </p>
 <br>
 
@@ -339,7 +339,7 @@
 	to the respective mode and click and drag on the screen. To reset the fluid velocity or clear 
 	all boundaries drawn, check and uncheck the respective boxes.
 	<br><br>
-    You can run the simulation <a href="/fluid_collision_sim/index.html">here</a>.
+    You can run the simulation <a href="fluid_collision_sim/index.html">here</a>.
 </p>
 <br>
 
@@ -405,7 +405,7 @@
 	<br><br>
 	<a href="https://github.com/rachelbhadra/smoke_simulator">Smoke Simulation</a>
 	<br><br>
-	<a href="https://github.com/amandaghassaei/gpu-io/blob/main/examples/fluid/index.js">gpu-io</a>
+	<a href="https://github.com/amandaghassaei/gpu-io">gpu-io</a>
 	<br><br>
 	<a href="https://developer.nvidia.com/gpugems/gpugems/part-vi-beyond-triangles/chapter-38-fast-fluid-dynamics-simulation-gpu">GPU Gems, Chapter 38: Fast Fluid Dynamics Simulation on the GPU</a>
 	<br><br>
@@ -422,25 +422,27 @@
 <body>
 	<h2 align="middle">Deliverables</h2>
 	<p align="middle">
-		<a href="/proposal/index.html">Project Proposal</a>
+		<a href="proposal/index.html">Project Proposal</a>
 		<br><br>
-		<a href="/milestone_report/index.html">Milestone Status Report</a>
+		<a href="milestone_report/index.html">Milestone Status Report</a>
 		<br><br>
 		<a href="https://docs.google.com/presentation/d/1LgihI9-YyA07ZR4FKIZrS8GfaZh03c7KwcF1X6YACwU/edit?usp=sharing">Milestone Presentation Slides</a>
 		<br><br>
 		<a href="https://docs.google.com/presentation/d/1WlIjTLvA51g0U1x2rq4SyW24QVdCxenjaggzpMY8E-w/edit?usp=sharing">Final Presentation Slides</a>
 		<br><br>
-		<a href="/fluid_collision_sim/index.html">Fluid Collision Simulator</a>
+		<a href="fluid_collision_sim/index.html">Fluid Collision Simulator</a>
 	</p>
 </body>
-<script>
+<!-- <script>
 	var links = document.body.getElementsByTagName("a")
 	var a = window.location.href.indexOf(".io")
 	var repo_name = window.location.href.substring(a+3)
 	for(var i = 0; i < links.length; i++){
 		var link = links[i]
 		var actual_name = link.href.substring(link.href.indexOf(".io")+4)
-		link.href = repo_name + actual_name
+		if (link.href.indexOf("https") == -1) {
+			link.href = repo_name + actual_name
+		}
 	}
-</script>
+</script> -->
 </html>
